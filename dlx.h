@@ -1,3 +1,6 @@
+#ifndef __DLX_H__
+#define __DLX_H__
+
 typedef struct Universe *dlx_universe;
 
 void dlx_add_subset(struct Universe *universe, char *name,
@@ -15,3 +18,5 @@ void dlx_search_all(struct Universe *universe);
 void dlx_search_any(struct Universe *universe);
 
 void dlx_print_universe(struct Universe *universe);
+
+#endif

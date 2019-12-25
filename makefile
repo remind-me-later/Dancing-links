@@ -10,7 +10,7 @@ dlx.a: dlx.o
 dlx.o: dlx.c dlx.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-example: dlx_example.c dlx.a
+example: example.c dlx.a
 	$(CC) $(CFLAGS) -o $@ $^
 
 8queens: 8queens.c dlx.a
