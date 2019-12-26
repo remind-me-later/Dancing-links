@@ -1,6 +1,6 @@
 # Dancing-links
 
-A C library that implements the Dancing Links algorithm to solve exact cover problems.
+A C library that implements Knuth's Algorithm X to solve exact cover problems.
 The library aims to have a simple interface and allows defining primary and secondary constraints.
 The implementation folows closely the one described in Knuth's [paper](https://arxiv.org/abs/cs/0011047).
 
