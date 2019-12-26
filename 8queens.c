@@ -30,9 +30,10 @@ main(void)
 		"B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12",
 	};
 
-	dlx_universe u = dlx_create_universe(16, 16, 26, primary_constraints,
-	                                     secondary_constraints
-	                                    );
+	dlx_universe u = dlx_create_universe();
+
+	dlx_add_primary_constraints(u, 16, primary_constraints);
+	dlx_add_secondary_constraints(u, 26, secondary_constraints);
 
 	/* fill corners */
 	dlx_add_subset(u, str[0][0], 3,
@@ -75,6 +76,9 @@ main(void)
 			               (2 * N - 1) + i + j,
 			               (4 * N - 4) + (N - 1 - j + i));
 		}
+
+	//dlx_print_universe(u);
+	//putchar('\n');
 
 	dlx_search_all(u);
 

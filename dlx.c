@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <unistd.h>
 
 /* Structs */
 
@@ -17,10 +18,12 @@ struct Data {
 	};
 };
 
-GENERATE_VECTOR_WITH_NAME(struct Data *, dataptr)
+CREATE_VECTOR(struct Data *, dataptr)
+CREATE_VECTOR(struct Data, data)
 
 struct Universe {
-	struct Data *root;
+	struct Data root;
+	data_vector element;
 	dataptr_vector allocated;
 	dataptr_vector solution;
 	unsigned int solutions;
@@ -28,13 +31,9 @@ struct Universe {
 
 /* Macros */
 
-#define FOREACH(ITER, NODE, DIRECTION, ...) do { \
-		struct Data *ITER; \
-		for(ITER = (NODE)->DIRECTION; \
-		    ITER != (NODE); ITER = ITER->DIRECTION) { \
-			__VA_ARGS__ \
-		} \
-	} while (0)
+#define FOREACH(ITER, NODE, DIRECTION) \
+	for(struct Data *ITER = (NODE)->DIRECTION; \
+	    ITER != (NODE); ITER = ITER->DIRECTION)
 
 #define FOREACH_SUBSET(ITER, NODE, ...) do { \
 		struct Data *(ITER) = (NODE); \
@@ -58,36 +57,36 @@ struct Universe {
 		(NODE)->right = (LEFT)->right; \
 		(NODE)->left = (LEFT); \
 		(LEFT)->right->left = (NODE); \
-		(LEFT)->right = (NODE); \
+		(NODE)->left->right = (NODE); \
 	} while (0)
 
 #define APPEND_UD(NODE, UP) do { \
 		(NODE)->down = (UP)->down; \
 		(NODE)->up = (UP); \
 		(UP)->down->up = (NODE); \
-		(UP)->down = (NODE); \
+		(NODE)->up->down = (NODE); \
 	} while (0)
 
 /* Functions */
 
 void
-dlx_print_universe(struct Universe *universe)
+dlx_print_universe(struct Universe *u)
 {
 	unsigned int i;
 
 	printf("U = {");
-	for (i = 1; i < universe->root->size; ++i) {
-		printf("%s", universe->root[i].name);
-		if (i + 1 != universe->root->size)
+	for (i = 0; i < u->element.len; ++i) {
+		printf("%s", u->element.at[i].name);
+		if (i + 1 != u->element.len)
 			printf(", ");
 	}
 	printf("}\n\n");
 
-	for (i = 0; i < universe->allocated.len; ++i) {
-		printf("%s = {", universe->allocated.at[i]->name);
-		FOREACH_SUBSET(it, universe->allocated.at[i],
+	for (i = 0; i < u->allocated.len; ++i) {
+		printf("%s = {", u->allocated.at[i]->name);
+		FOREACH_SUBSET(it, u->allocated.at[i],
 		               printf("%s", it->column->name);
-		               if (it->right != universe->allocated.at[i])
+		               if (it->right != u->allocated.at[i])
 		               printf(", ");
 		              );
 		puts("}");
@@ -95,58 +94,69 @@ dlx_print_universe(struct Universe *universe)
 }
 
 void
-dlx_destroy_universe(struct Universe *universe)
+dlx_destroy_universe(struct Universe *u)
 {
-	unsigned int i;
+	free(u->element.at);
 
-	free(universe->root);
+	for (unsigned int i = 0; i < u->allocated.len; ++i)
+		free(u->allocated.at[i]);
 
-	for (i = 0; i < universe->allocated.len; ++i)
-		free(universe->allocated.at[i]);
-
-	free(universe);
+	free(u);
 }
 
 struct Universe *
-dlx_create_universe(unsigned int subsets,
-                    unsigned int primary_elements,
-                    unsigned int secondary_elements,
-                    char **primary, char **secondary)
+dlx_create_universe()
 {
-	unsigned int i;
-	struct Universe *universe = malloc(sizeof(*universe));
-	struct Data *root = malloc((primary_elements + secondary_elements + 1) *
-	                           sizeof(*root));
+	struct Universe *u = malloc(sizeof(*u));
 
-	root->name = "root";
-	root->size = (primary_elements + secondary_elements) + 1;
-	SELF_LR(root);
-	SELF_UD(root);
+	u->element = vector_data_new(128);
+	u->solution = vector_dataptr_new(128);
+	u->allocated = vector_dataptr_new(128);
+	u->solutions = 0;
 
-	for (i = 1; i < primary_elements + 1; ++i) {
-		(root + i)->name = primary[i - 1];
-		(root + i)->size = 0;
-		SELF_UD(root + i);
-		APPEND_LR(root + i, root + i - 1);
-	}
+	u->root.name = "root";
+	SELF_UD(&u->root);
+	SELF_LR(&u->root);
 
-	for (; i < primary_elements + secondary_elements + 1; ++i) {
-		(root + i)->name = secondary[i - primary_elements - 1];
-		(root + i)->size = 0;
-		SELF_UD(root + i);
-		SELF_LR(root + i);
-	}
-
-	universe->root = root;
-	universe->solution = new_dataptr_vector(primary_elements + secondary_elements);
-	universe->allocated = new_dataptr_vector(subsets);
-	universe->solutions = 0;
-
-	return universe;
+	return u;
 }
 
 void
-dlx_add_subset(struct Universe *universe,
+dlx_add_primary_constraints(struct Universe *u, unsigned int number,
+                            char **constraints)
+{
+	while (u->element.len + number >= u->element.capacity)
+		vector_data_resize(&u->element);
+
+	for (unsigned int i = u->element.len; i < u->element.len + number; ++i) {
+		u->element.at[i].name = constraints[i];
+		u->element.at[i].size = 0;
+		SELF_UD(u->element.at + i);
+		APPEND_LR(u->element.at + i, u->root.left);
+	}
+
+	u->element.len += number;
+}
+
+void
+dlx_add_secondary_constraints(struct Universe *u, unsigned int number,
+                              char **constraints)
+{
+	if(u->element.len + number >= u->element.capacity)
+		vector_data_resize(&u->element);
+
+	for (unsigned int i = u->element.len; i < u->element.len + number; ++i) {
+		u->element.at[i].name = constraints[i];
+		u->element.at[i].size = 0;
+		SELF_UD(u->element.at + i);
+		SELF_LR(u->element.at + i);
+	}
+
+	u->element.len += number;
+}
+
+void
+dlx_add_subset(struct Universe *u,
                char *name, unsigned int size, ...)
 {
 	va_list args;
@@ -154,26 +164,20 @@ dlx_add_subset(struct Universe *universe,
 
 	va_start(args, size);
 
-	subset->column = universe->root + 1 + va_arg(args, unsigned int);
-	subset->name = name;
-	APPEND_UD(subset, subset->column);
 	SELF_LR(subset);
-	++subset->column->size;
-
-	for (unsigned int i = 1; i < size; ++i) {
-		(subset + i)->column =
-		        universe->root + 1 + va_arg(args, unsigned int);
+	for (unsigned int i = 0; i < size; ++i) {
 		(subset + i)->name = name;
+		(subset + i)->column =
+		        u->element.at + va_arg(args, unsigned int);
 		APPEND_UD(subset + i, (subset + i)->column);
-		APPEND_LR(subset + i, subset + i - 1);
+		APPEND_LR(subset + i, subset->left);
 		++(subset + i)->column->size;
 	}
 
 	va_end(args);
 
-	dataptr_vector_push(&universe->allocated, subset);
+	vector_dataptr_push(&(u->allocated), subset);
 }
-
 
 void
 cover(struct Data *column)
@@ -181,105 +185,110 @@ cover(struct Data *column)
 	column->left->right = column->right;
 	column->right->left = column->left;
 
-	FOREACH(row, column, down, FOREACH(it, row, right,
-	                                   it->up->down = it->down;
-	                                   it->down->up = it->up;
-	                                   --it->column->size;
-	                                  ););
+	FOREACH(row, column, down)
+	FOREACH(it, row, right) {
+		it->up->down = it->down;
+		it->down->up = it->up;
+		--it->column->size;
+	}
 }
 
 void
 uncover(struct Data *column)
 {
-	FOREACH(row, column, up, FOREACH(it, row, left,
-	                                 it->up->down = it;
-	                                 it->down->up = it;
-	                                 ++it->column->size;
-	                                ););
+	FOREACH(row, column, up)
+	FOREACH(it, row, left) {
+		it->up->down = it;
+		it->down->up = it;
+		++it->column->size;
+	}
 
 	column->left->right = column;
 	column->right->left = column;
 }
 
 struct Data *
-choose_column(struct Data *root)
+choose_column(struct Universe *u)
 {
-	struct Data *column = root->right;
+	struct Data *column = u->root.right;
 
-	FOREACH(it, root, right, if (it->size < column->size) column = it;);
+	FOREACH(it, &u->root, right) {
+		if (it->size < column->size)
+			column = it;
+	}
 
 	return column;
 }
 
 void
-print_solution(struct Universe *universe)
+print_solution(struct Universe *u)
 {
 	unsigned int i;
 
-	printf("S%u* = {", ++universe->solutions);
-	for (i = 0; i < universe->solution.len; ++i) {
-		printf("%s", universe->solution.at[i]->name);
-		if (i + 1 != universe->solution.len)
+	printf("S%u* = {", ++u->solutions);
+	for (i = 0; i < u->solution.len; ++i) {
+		printf("%s", u->solution.at[i]->name);
+		if (i + 1 != u->solution.len)
 			printf(", ");
 	}
 	puts("}");
 }
 
 void
-dlx_search_all(struct Universe *universe)
+dlx_search_all(struct Universe *u)
 {
 	struct Data *c;
 
-	if (universe->root->right == universe->root) {
-		print_solution(universe);
+	if (u->root.right == &u->root) {
+		print_solution(u);
 		return;
 	}
 
-	cover(c = choose_column(universe->root));
+	cover(c = choose_column(u));
 
-	FOREACH(r, c, down,
-	        dataptr_vector_push(&universe->solution, r);
+	FOREACH(r, c, down) {
+		vector_dataptr_push(&u->solution, r);
 
-	        FOREACH(j, r, right, cover(j->column););
+		FOREACH(j, r, right) cover(j->column);
 
-	        dlx_search_all(universe);
+		dlx_search_all(u);
 
-	        c = (r = dataptr_vector_pop(&universe->solution))->column;
+		c = (r = vector_dataptr_pop(&u->solution))->column;
 
-	        FOREACH(j, r, left, uncover(j->column););
-	       );
+		FOREACH(j, r, left) uncover(j->column);
+	}
 
 	uncover(c);
 }
 
 void
-dlx_search_any(struct Universe *universe)
+dlx_search_any(struct Universe *u)
 {
 	struct Data *c;
 
-	if (universe->root->right == universe->root) {
-		print_solution(universe);
+	if (u->root.right == &u->root) {
+		print_solution(u);
 		return;
 	}
 
-	cover(c = choose_column(universe->root));
+	cover(c = choose_column(u));
 
-	FOREACH(r, c, down,
-	        dataptr_vector_push(&universe->solution, r);
+	FOREACH(r, c, down) {
+		vector_dataptr_push(&u->solution, r);
 
-	        FOREACH(j, r, right, cover(j->column););
+		FOREACH(j, r, right) cover(j->column);
 
-	        dlx_search_any(universe);
+		dlx_search_any(u);
 
-	        c = (r = dataptr_vector_pop(&universe->solution))->column;
+		c = (r = vector_dataptr_pop(&u->solution))->column;
 
-	        FOREACH(j, r, left, uncover(j->column););
+		FOREACH(j, r, left) uncover(j->column);
 
-	if (universe->solutions > 0) {
-	uncover(c);
-		return;
+		if (u->solutions > 0) {
+			uncover(c);
+			return;
+		}
 	}
-	       );
 
 	uncover(c);
 }

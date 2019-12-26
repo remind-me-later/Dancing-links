@@ -6,12 +6,15 @@ typedef struct Universe *dlx_universe;
 void dlx_add_subset(struct Universe *universe, char *name,
                     unsigned int size, ...);
 
-struct Universe *dlx_create_universe(unsigned int subsets,
-                                     unsigned int primary_elements,
-                                     unsigned int secondary_elements,
-				     char **primary, char **secondary);
+struct Universe *dlx_create_universe();
 
 void dlx_destroy_universe(struct Universe *universe);
+
+void dlx_add_primary_constraints(struct Universe *u, unsigned int number,
+                                 char **constraints);
+
+void dlx_add_secondary_constraints(struct Universe *u, unsigned int number,
+                                   char **constraints);
 
 void dlx_search_all(struct Universe *universe);
 
