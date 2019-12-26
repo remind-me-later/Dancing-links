@@ -96,11 +96,13 @@ dlx_print_universe(struct Universe *u)
 void
 dlx_destroy_universe(struct Universe *u)
 {
-	free(u->element.at);
+	vector_data_delete(&u->element);
 
 	for (unsigned int i = 0; i < u->allocated.len; ++i)
 		free(u->allocated.at[i]);
 
+	vector_dataptr_delete(&u->allocated);
+	vector_dataptr_delete(&u->solution);
 	free(u);
 }
 

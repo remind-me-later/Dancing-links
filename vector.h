@@ -21,6 +21,11 @@
 		return vector;                                                 \
 	}                                                                      \
 	\
+	void								       \
+	vector_##NAME##_delete(NAME##_vector *vector)			       \
+	{								       \
+		free(vector->at);					       \
+	}								       \
 	void                                                                   \
 	vector_##NAME##_resize(NAME##_vector *vector)                          \
 	{                                                                      \
