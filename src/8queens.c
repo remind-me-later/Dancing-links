@@ -32,8 +32,8 @@ main(void)
 
 	dlx_universe u = dlx_create_universe();
 
-	dlx_add_primary_constraints(u, 16, primary_constraints);
-	dlx_add_secondary_constraints(u, 26, secondary_constraints);
+	dlx_add_primary_constraints(u, 2 * N, primary_constraints);
+	dlx_add_secondary_constraints(u, (N - 2) * 4 + 2, secondary_constraints);
 
 	/* fill corners */
 	dlx_add_subset(u, str[0][0], 3,
