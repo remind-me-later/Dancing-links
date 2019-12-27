@@ -1,7 +1,7 @@
+BIN_DIR = bin
+LIB_DIR = lib
 SRC_DIR = src
 OBJ_DIR = obj
-LIB_DIR = lib
-BIN_DIR = bin
 
 SRC = $(wildcard $(SRC_DIR)/*.c)
 OBJ = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
@@ -11,18 +11,18 @@ CFLAGS += -O3 -s -Wall -Wextra -Werror -pedantic -flto -fomit-frame-pointer
 LDFLAGS += -Llib
 LDLIBS += -ldlx
 
-.PHONY: all clean 
+.PHONY: all clean
 
-all: libdlx 8queens example
+all: $(LIB_DIR)/libdlx.a $(BIN_DIR)/8queens $(BIN_DIR)/example
 
-libdlx: $(OBJ_DIR)/dlx.o
-	ar rcs $(LIB_DIR)/$@.a $^
+$(LIB_DIR)/libdlx.a: $(OBJ_DIR)/dlx.o
+	ar rcs $@ $^
 
-8queens: $(OBJ_DIR)/8queens.o
-	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $(BIN_DIR)/$@
+$(BIN_DIR)/8queens: $(OBJ_DIR)/8queens.o
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-example: $(OBJ_DIR)/example.o
-	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $(BIN_DIR)/$@
+$(BIN_DIR)/example: $(OBJ_DIR)/example.o
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
