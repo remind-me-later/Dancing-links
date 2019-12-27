@@ -144,7 +144,7 @@ void
 dlx_add_secondary_constraints(struct Universe *u, unsigned int number,
                               char **constraints)
 {
-	if(u->element.len + number >= u->element.capacity)
+	while (u->element.len + number >= u->element.capacity)
 		vector_data_resize(&u->element);
 
 	for (unsigned int i = u->element.len; i < u->element.len + number; ++i) {
@@ -225,10 +225,8 @@ choose_column(struct Universe *u)
 void
 print_solution(struct Universe *u)
 {
-	unsigned int i;
-
 	printf("S%u* = {", ++u->solutions);
-	for (i = 0; i < u->solution.len; ++i) {
+	for (unsigned int i = 0; i < u->solution.len; ++i) {
 		printf("%s", u->solution.at[i]->name);
 		if (i + 1 != u->solution.len)
 			printf(", ");
