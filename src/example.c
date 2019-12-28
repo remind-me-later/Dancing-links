@@ -14,14 +14,14 @@ main(void)
 	/* Add constraints */
 	dlx_add_primary_constraints(u, constraints);
 
-	/* Add subsets, specifying a name, the number of elements
-	 * and the position of the elements in the universe*/
-	dlx_add_subset(u, "A", 3, 0, 3, 6);
-	dlx_add_subset(u, "B", 2, 0, 3);
-	dlx_add_subset(u, "C", 3, 3, 4, 6);
-	dlx_add_subset(u, "D", 3, 2, 4, 5);
-	dlx_add_subset(u, "E", 4, 1, 2, 5, 6);
-	dlx_add_subset(u, "F", 2, 1, 6);
+	/* Add subsets, specifying the number of elements,
+	 * the name, and the position of the elements in the universe*/
+	dlx_add_subset(u, 3, "A", 0, 3, 6);
+	dlx_add_subset(u, 2, "B", 0, 3);
+	dlx_add_subset(u, 3, "C", 3, 4, 6);
+	dlx_add_subset(u, 3, "D", 2, 4, 5);
+	dlx_add_subset(u, 4, "E", 1, 2, 5, 6);
+	dlx_add_subset(u, 2, "F", 1, 6);
 
 	/* Look for all solutions */
 	dlx_search_all(u);

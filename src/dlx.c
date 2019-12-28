@@ -158,7 +158,7 @@ dlx_create_universe()
 }
 
 void
-dlx_destroy_universe(struct Universe *u)
+dlx_delete_universe(struct Universe *u)
 {
 	vector_data_delete(&u->elem);
 
@@ -166,7 +166,7 @@ dlx_destroy_universe(struct Universe *u)
 		free(u->alloc.at[i]);
 
 	for (unsigned int i = 0; i < u->sols.len; ++i)
-		free(u->sols.at + i);
+		free(u->sols.at[i]);
 
 	vector_dataptr_delete(&u->alloc);
 	vector_string_delete(&u->sols);
@@ -212,12 +212,12 @@ dlx_add_secondary_constraints(struct Universe *u, char *constraints)
 }
 
 void
-dlx_add_subset(struct Universe *u, char *name, unsigned int size, ...)
+dlx_add_subset(struct Universe *u, unsigned int size, char *name, ...)
 {
 	va_list args;
 	struct Data *subset = malloc(size * sizeof(*subset));
 
-	va_start(args, size);
+	va_start(args, name);
 
 	SELF_LR(subset);
 	for (unsigned int i = 0; i < size; ++i) {
@@ -250,6 +250,12 @@ dlx_push_solution(struct Universe *u)
 	                   u->sol_stack.at[u->sol_stack.len - 1]->name);
 
 	vector_string_push(&u->sols, str.at);
+}
+
+char *
+dlx_pop_solution(struct Universe *u)
+{
+	return u->sols.at[--u->sols.len];
 }
 
 void

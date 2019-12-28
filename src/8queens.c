@@ -36,23 +36,23 @@ main(void)
 	dlx_add_secondary_constraints(u, reverse_diagonals);
 
 	/* fill corners */
-	dlx_add_subset(u, str[0][0], 3,
+	dlx_add_subset(u, 3, str[0][0],
 	               0,
 	               N,
 	               (4 * N - 4) + (N - 1));
 
 
-	dlx_add_subset(u, str[N - 1][N - 1], 3,
+	dlx_add_subset(u, 3, str[N - 1][N - 1],
 	               N - 1,
 	               N + N - 1,
 	               (4 * N - 4) + (N - 1));
 
-	dlx_add_subset(u, str[N - 1][0], 3,
+	dlx_add_subset(u, 3, str[N - 1][0],
 	               0,
 	               N + N - 1,
 	               (2 * N - 1) + N - 1);
 
-	dlx_add_subset(u, str[0][N - 1], 3,
+	dlx_add_subset(u, 3, str[0][N - 1],
 	               N - 1,
 	               N,
 	               (2 * N - 1) + N - 1);
@@ -60,7 +60,7 @@ main(void)
 	/* Fill center band */
 	for (i = 1; i < N - 1; ++i)
 		for (j = 0; j < N; ++j) {
-			dlx_add_subset(u, str[i][j], 4,
+			dlx_add_subset(u, 4, str[i][j],
 			               j,
 			               N + i,
 			               (2 * N - 1) + i + j,
@@ -70,7 +70,7 @@ main(void)
 	/* Fill up and down bands */
 	for (i = 0; i < N; i += N - 1)
 		for (j = 1; j < N - 1; ++j) {
-			dlx_add_subset(u, str[i][j], 4,
+			dlx_add_subset(u, 4, str[i][j],
 			               j,
 			               N + i,
 			               (2 * N - 1) + i + j,
