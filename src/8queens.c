@@ -20,20 +20,20 @@ main(void)
 		{"a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"}
 	};
 
-	char *primary_constraints[] = {
-		"F0", "F1", "F2", "F3", "F4", "F5", "F6", "F7",
-		"R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7"
-	};
-
-	char *secondary_constraints[] = {
-		"A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12",
-		"B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12",
-	};
+	char files[] = "F0, F1, F2, F3, F4, F5, F6, F7";
+	char ranks[] = "R0, R1, R2, R3, R4, R5, R6, R7";
+	char diagonals[] =
+	        "A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12";
+	char reverse_diagonals[] =
+	        "B0, B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B12";
 
 	dlx_universe u = dlx_create_universe();
 
-	dlx_add_primary_constraints(u, 2 * N, primary_constraints);
-	dlx_add_secondary_constraints(u, (N - 2) * 4 + 2, secondary_constraints);
+	dlx_add_primary_constraints(u, files);
+	dlx_add_primary_constraints(u, ranks);
+
+	dlx_add_secondary_constraints(u, diagonals);
+	dlx_add_secondary_constraints(u, reverse_diagonals);
 
 	/* fill corners */
 	dlx_add_subset(u, str[0][0], 3,
@@ -77,10 +77,13 @@ main(void)
 			               (4 * N - 4) + (N - 1 - j + i));
 		}
 
-	//dlx_print_universe(u);
-	//putchar('\n');
-
 	dlx_search_all(u);
+
+	puts("Universe:");
+	dlx_print_universe(u);
+
+	puts("Solutions:");
+	dlx_print_solutions(u);
 
 	return 0;
 }

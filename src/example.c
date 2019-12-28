@@ -6,13 +6,13 @@ main(void)
 {
 	/* Create a string array with the names 
 	 * of the elements in our universe. */
-	char *constraints[] = {"1", "2", "3", "4", "5", "6", "7"};
+	char constraints[] = "1, 2, 3, 4, 5, 6, 7";
 
 	/* Setup universe. */
 	dlx_universe u = dlx_create_universe();
 
 	/* Add constraints */
-	dlx_add_primary_constraints(u, 7, constraints);
+	dlx_add_primary_constraints(u, constraints);
 
 	/* Add subsets, specifying a name, the number of elements
 	 * and the position of the elements in the universe*/
@@ -23,13 +23,16 @@ main(void)
 	dlx_add_subset(u, "E", 4, 1, 2, 5, 6);
 	dlx_add_subset(u, "F", 2, 1, 6);
 
+	/* Look for all solutions */
+	dlx_search_all(u);
+
 	/* Print universe */
 	puts("Universe:");
 	dlx_print_universe(u);
 
-	/* Search and print all solutions */
+	/* Print solutions */
 	puts("\nSolutions:");
-	dlx_search_all(u);
+	dlx_print_solutions(u);
 
 	return 0;
 }
