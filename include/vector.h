@@ -6,16 +6,16 @@
 #define CREATE_VECTOR(TYPE, NAME)                                         \
 	typedef struct {                                                       \
 		TYPE* at;                                                      \
-		size_t len, capacity;                                          \
+		size_t len, cap;                                          \
 	} NAME##_vector;                                                       \
 	\
 	NAME##_vector \
-	vector_##NAME##_new(unsigned int capacity)                             \
+	vector_##NAME##_new(unsigned int cap)                             \
 	{                                                                      \
 		NAME##_vector vector;                                          \
 		\
-		vector.at = malloc(capacity * sizeof(*vector.at));             \
-		vector.capacity = capacity;                                    \
+		vector.at = malloc(cap * sizeof(*vector.at));             \
+		vector.cap = cap;                                    \
 		vector.len = 0;                                                \
 		\
 		return vector;                                                 \
@@ -29,15 +29,15 @@
 	void                                                                   \
 	vector_##NAME##_resize(NAME##_vector *vector)                          \
 	{                                                                      \
-		vector->capacity *= 2;                                         \
+		vector->cap *= 2;                                         \
 		vector->at = realloc(vector->at,                               \
-		                     (vector->capacity) * sizeof(*vector->at));  \
+		                     (vector->cap) * sizeof(*vector->at));  \
 	}                                                                      \
 	\
 	void                                                                   \
 	vector_##NAME##_push(NAME##_vector *vector, TYPE data)                 \
 	{                                                                      \
-		if (vector->len + 1 == vector->capacity)                       \
+		if (vector->len + 1 == vector->cap)                       \
 			vector_##NAME##_resize(vector);                        \
 		\
 		vector->at[vector->len++] = data;                              \

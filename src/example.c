@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "dlx.h"
+#include <dlx.h>
 
 int
 main(void)
@@ -12,7 +12,7 @@ main(void)
 	dlx_universe u = dlx_create_universe();
 
 	/* Add constraints */
-	dlx_add_primary_constraints(u, constraints);
+	dlx_add_constraints(u, constraints, 1);
 
 	/* Add subsets, specifying the number of elements,
 	 * the name, and the position of the elements in the universe*/
@@ -23,8 +23,11 @@ main(void)
 	dlx_add_subset(u, 4, "E", 1, 2, 5, 6);
 	dlx_add_subset(u, 2, "F", 1, 6);
 
+	/* Setup links */
+	dlx_create_links(u);
+
 	/* Look for all solutions */
-	dlx_search_all(u);
+	dlx_search(u, 0);
 
 	/* Print universe */
 	puts("Universe:");
@@ -33,6 +36,9 @@ main(void)
 	/* Print solutions */
 	puts("\nSolutions:");
 	dlx_print_solutions(u);
+
+	/* clean up */
+	dlx_delete_universe(u);
 
 	return 0;
 }
