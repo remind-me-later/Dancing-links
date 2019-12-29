@@ -49,7 +49,7 @@ main(void)
 	dlx_create_links(u);
 
 	/* Look for solutions, specifying number 
-	 * `of required solutions (0 for all) */
+	 * of required solutions (0 for all) */
 	dlx_search(u, 0);
 
 	/* Print universe */
