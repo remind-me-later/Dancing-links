@@ -9,6 +9,7 @@ bin/
 
 # debugging and profiling
 *.out
+*.txt
 
 # configuration
 *.json
