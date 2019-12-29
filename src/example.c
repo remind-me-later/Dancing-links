@@ -9,7 +9,7 @@ main(void)
 	char constraints[] = "1, 2, 3, 4, 5, 6, 7";
 
 	/* Setup universe. */
-	dlx_universe u = dlx_create_universe();
+	dlx_universe u = dlx_create_universe(7, 6, 1);
 
 	/* Add constraints */
 	dlx_add_constraints(u, constraints, 1);
@@ -26,7 +26,8 @@ main(void)
 	/* Setup links */
 	dlx_create_links(u);
 
-	/* Look for all solutions */
+	/* Look for solutions, specifying number 
+	 * `of required solutions (0 for all) */
 	dlx_search(u, 0);
 
 	/* Print universe */

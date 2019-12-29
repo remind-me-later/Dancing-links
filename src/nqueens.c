@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <dlx.h>
 
-#define N 10
+#define N 8
 #define NDIAGONALS (N - 2) * 2 + 1
+#define NELEMENTS 2 * (N + NDIAGONALS)
+#define NSUBSETS N * N
 
 #define STRINGL(X) (((X) <= 10) ? 3 * (X) : 30 + 4 * ((X) - 10)) - 1
 #define CPOSITION (N <= 10) ? 2 * N : 20 + 3 * (N - 10)
@@ -40,7 +42,7 @@ main(void)
 	sprintf(diagonals + len, "A%u", i);
 	sprintf(reverse_diagonals + len, "B%u", i);
 
-	dlx_universe u = dlx_create_universe();
+	dlx_universe u = dlx_create_universe(NELEMENTS, NSUBSETS, 32);
 
 	dlx_add_constraints(u, files, 1);
 	dlx_add_constraints(u, ranks, 1);
