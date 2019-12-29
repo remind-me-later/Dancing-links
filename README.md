@@ -4,6 +4,14 @@ A C library that implements Knuth's Algorithm X to solve exact cover problems.
 The library aims to have a simple interface and allows defining primary and secondary constraints.
 The implementation folows closely the one described in Knuth's [paper](https://arxiv.org/abs/cs/0011047).
 
+## Making
+
+Executing the make command should compile everything, putting the executable examples in the bin folder and the library in the lib folder.
+```
+make
+```
+The debug and profile targets compile the program to be analyzed by Valgrind and gprof respectively.
+
 ## Example
 
 Consider the following [example](https://en.wikipedia.org/wiki/Exact_cover#Detailed_example):
