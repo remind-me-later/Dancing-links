@@ -7,9 +7,8 @@ obj/
 # binaries
 bin/
 
-# debugging and profiling
-*.out
-*.txt
+# profiling
+prof/
 
 # configuration
 *.json
