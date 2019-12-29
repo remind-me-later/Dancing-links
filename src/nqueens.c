@@ -6,8 +6,8 @@
 #define NELEMENTS 2 * (N + NDIAGONALS)
 #define NSUBSETS N * N
 
-#define STRINGL(X) (((X) <= 10) ? 3 * (X) : 30 + 4 * ((X) - 10)) - 1
-#define CPOSITION (N <= 10) ? 2 * N : 20 + 3 * (N - 10)
+#define STRINGL(X) ((X) <= 10) ? 3 * (X) : 30 + 4 * ((X) - 10) - 1
+#define CPOSITION (N <= 10) ? 3 : 4
 #define CFILESRANKS STRINGL(N)
 #define CDIAGONALS STRINGL(NDIAGONALS)
 
