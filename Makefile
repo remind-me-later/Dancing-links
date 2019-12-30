@@ -23,7 +23,7 @@ directories: $(OUT_DIR)
 debug: CFLAGS = -O0 -g3 -gdwarf-2 -DDEBUG
 debug: clean all
 
-profile: CFLAGS = -O3 -pg -g3 -gdwarf-2 -DDEBUG
+profile: CFLAGS = -pg -O0 -g3 -gdwarf-2 -DDEBUG -fno-inline
 profile: LDFLAGS += -pg
 profile: clean all
 
