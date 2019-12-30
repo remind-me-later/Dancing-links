@@ -101,6 +101,7 @@ trim(char *s)
 /* Internal functions */
 
 void
+__attribute__((hot))
 cover(struct Data *column)
 {
 	column->left->right = column->right;
@@ -115,6 +116,7 @@ cover(struct Data *column)
 }
 
 void
+__attribute__((hot))
 uncover(struct Data *column)
 {
 	FOREACH(row, column, up)
@@ -129,6 +131,7 @@ uncover(struct Data *column)
 }
 
 struct Data *
+__attribute__((hot))
 choose_column(struct Universe *u)
 {
 	struct Data *it, *column = u->root.right;
@@ -293,7 +296,7 @@ dlx_search(struct Universe *u, unsigned int nsol)
 
 		FOREACH(j, r, left) uncover(j->column);
 
-		if (nsol && u->sols.len == nsol)
+		if (__builtin_expect(nsol && u->sols.len == nsol, 0))
 			break;
 	}
 

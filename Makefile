@@ -12,7 +12,7 @@ OBJ = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 CFLAGS= -DNDEBUG -std=c11 -O3 -s -Wall -Wextra -Werror -pedantic -flto -fomit-frame-pointer
 CPPFLAGS += -Iinclude
 LDFLAGS += -Llib
-LDLIBS += -ldlx
+#LDLIBS += -ldlx
 
 .PHONY: all directories debug profile clean 
 
@@ -23,7 +23,7 @@ directories: $(OUT_DIR)
 debug: CFLAGS = -O0 -g3 -gdwarf-2 -DDEBUG
 debug: clean all
 
-profile: CFLAGS = -pg -O0 -g3 -gdwarf-2 -DDEBUG -fno-inline
+profile: CFLAGS = -pg -g3 -fno-inline
 profile: LDFLAGS += -pg
 profile: clean all
 
@@ -36,10 +36,10 @@ $(OUT_DIR):
 $(LIB_DIR)/libdlx.a: $(OBJ_DIR)/dlx.o
 	ar rcs $@ $^
 
-$(BIN_DIR)/nqueens: $(OBJ_DIR)/nqueens.o
+$(BIN_DIR)/nqueens: $(OBJ_DIR)/nqueens.o $(OBJ_DIR)/dlx.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-$(BIN_DIR)/example: $(OBJ_DIR)/example.o
+$(BIN_DIR)/example: $(OBJ_DIR)/example.o $(OBJ_DIR)/dlx.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
