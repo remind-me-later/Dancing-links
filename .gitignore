@@ -11,4 +11,5 @@ bin/
 prof/
 
 # configuration
+.clangd
 *.json

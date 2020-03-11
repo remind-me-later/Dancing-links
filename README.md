@@ -77,7 +77,7 @@ main(void)
 ```
 Executing the program yields the following result:
 ```
-> ./bin/example
+$ ./bin/example
 Universe:
 U = {1, 2, 3, 4, 5, 6, 7}
 A = {1, 4, 7}
@@ -94,7 +94,7 @@ S1* = {B, D, F}
 
 The second example nqueens.c finds solutions for the n-queens problem. Executing it with N = 4 produces:
 ```
-> ./bin/nqueens
+$ ./bin/nqueens
 Universe:
 U = {F0, F1, F2, F3, R0, R1, R2, R3, A0, A1, A2, A3, A4, B0, B1, B2, B3, B4}
 a4 = {F0, R0, B2}

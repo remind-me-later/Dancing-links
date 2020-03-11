@@ -4,7 +4,7 @@
 int
 main(void)
 {
-	/* Create a string array with the names 
+	/* Create a string array with the names
 	 * of the elements in our universe. */
 	char constraints[] = "1, 2, 3, 4, 5, 6, 7";
 
@@ -26,8 +26,8 @@ main(void)
 	/* Setup links */
 	dlx_create_links(u);
 
-	/* Look for solutions, specifying number 
-	 * `of required solutions (0 for all) */
+	/* Look for solutions, specifying number of required solutions
+	 * (0 for all) */
 	dlx_search(u, 0);
 
 	/* Print universe */

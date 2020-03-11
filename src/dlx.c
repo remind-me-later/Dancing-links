@@ -80,6 +80,7 @@ ltrim(char *s)
 {
 	while (isspace(*s))
 		s++;
+
 	return s;
 }
 
@@ -87,7 +88,9 @@ char *
 rtrim(char *s)
 {
 	char *back = s + strlen(s);
+
 	while (isspace(*--back));
+
 	*(back + 1) = '\0';
 	return s;
 }
@@ -235,6 +238,7 @@ dlx_create_links(struct Universe *u)
 
 	for (i = 0; i < u->ss_len; ++i) {
 		SELF_LR(u->subsets[i].elem);
+
 		for (j = 0; j < u->subsets[i].len; ++j) {
 			u->subsets[i].elem[j].column =
 			        u->elems.elem + u->subsets[i].elem[j].col_pos;
@@ -311,14 +315,18 @@ dlx_print_universe(struct Universe *u)
 	unsigned int i, j;
 
 	printf("U = {");
+
 	for (i = 0; i < u->elems.len - 1; ++i)
 		printf("%s, ", u->elems.elem[i].name);
+
 	printf("%s}\n", u->elems.elem[u->elems.len - 1].name);
 
 	for (i = 0; i < u->ss_len; ++i) {
 		printf("%s = {", u->subsets[i].elem->name);
+
 		for (j = 0; j < u->subsets[i].len - 1; ++j)
 			printf("%s, ", u->subsets[i].elem[j].column->name);
+
 		printf("%s}\n",
 		       u->subsets[i].elem[u->subsets[i].len - 1].column->name);
 	}
