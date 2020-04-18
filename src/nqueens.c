@@ -26,29 +26,33 @@ main(void)
 		for (j = 0; j < N; ++j)
 			sprintf(position[i][j], "%c%u", 97 + j, N - i);
 
-	/* Generate file and rank names */
-	for (i = 0; i < N - 1; ++i) {
-		sprintf(files + len, "F%u,", i);
-		len += sprintf(ranks + len, "R%u,", i);
-	}
-	sprintf(files + len, "F%u", i);
-	sprintf(ranks + len, "R%u", i);
-
-	/* Generate diagonal names */
-	for (i = len = 0; i < NDIAGONALS - 1; ++i) {
-		sprintf(diagonals + len, "A%u,", i);
-		len += sprintf(reverse_diagonals + len, "B%u,", i);
-	}
-	sprintf(diagonals + len, "A%u", i);
-	sprintf(reverse_diagonals + len, "B%u", i);
-
 	dlx_universe u = dlx_create_universe(NELEMENTS, NSUBSETS, 32);
 
-	dlx_add_constraints(u, files, 1);
-	dlx_add_constraints(u, ranks, 1);
+	/* Generate file and rank names */
+	for (i = 0; i < N; ++i) {
+		unsigned int tmp;
 
-	dlx_add_constraints(u, diagonals, 0);
-	dlx_add_constraints(u, reverse_diagonals, 0);
+		sprintf(files + len, "F%u%c", i, '\0');
+		tmp = sprintf(ranks + len, "R%u%c", i, '\0');
+
+		dlx_add_constraint(u, DLX_PRIMARY, files + len);
+		dlx_add_constraint(u, DLX_PRIMARY, ranks + len);
+
+		len += tmp;
+	}
+
+	/* Generate diagonal names */
+	for (i = len = 0; i < NDIAGONALS; ++i) {
+		unsigned int tmp;
+
+		sprintf(diagonals + len, "A%u,", i);
+		tmp = sprintf(reverse_diagonals + len, "B%u,", i);
+
+		dlx_add_constraint(u, DLX_SECONDARY, diagonals + len);
+		dlx_add_constraint(u, DLX_SECONDARY, reverse_diagonals + len);
+
+		len = tmp;
+	}
 
 	/* fill corners */
 	dlx_add_subset(u, 3, position[0][0],
@@ -97,10 +101,10 @@ main(void)
 	dlx_search(u, 0);
 
 	puts("Universe:");
-	dlx_print_universe(u);
+	dlx_print_universe(u, "%s", "%s");
 
 	puts("Solutions:");
-	dlx_print_solutions(u);
+	dlx_print_solutions(u, "%s");
 
 	dlx_delete_universe(u);
 
