@@ -3,13 +3,15 @@ LIB_DIR = lib
 SRC_DIR = src
 OBJ_DIR = obj
 TEST_DIR = tests
+PROF_DIR = prof
 
 OUT_DIR = $(LIB_DIR) $(OBJ_DIR) $(BIN_DIR)
 
 SRC = $(wildcard $(SRC_DIR)/*.c)
 OBJ = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
-CFLAGS= -DNDEBUG -std=c11 -O3 -s -Wall -Wextra -Werror -pedantic -flto -fomit-frame-pointer
+CWARN = -Wall -Wextra -Werror -pedantic -std=c11
+CFLAGS = -DNDEBUG -Ofast -s -flto
 CPPFLAGS += -Iinclude
 LDFLAGS += -Llib
 #LDLIBS += -ldlx
@@ -20,11 +22,12 @@ all: directories $(LIB_DIR)/libdlx.a $(BIN_DIR)/nqueens $(BIN_DIR)/example
 
 directories: $(OUT_DIR)
 
-debug: CFLAGS = -O0 -g3 -gdwarf-2 -DDEBUG
+debug: CFLAGS = $(CWARN) -DDEBUG -O0 -g3 -fsanitize=address -fsanitize=undefined
+debug: LDFLAGS += -fsanitize=address -fsanitize=undefined
 debug: clean all
 
-profile: CFLAGS = -pg -g3 -fno-inline
-profile: LDFLAGS += -pg
+profile: CFLAGS = -pg -fno-inline -fprofile-generate=$(PROF_DIR)
+profile: LDFLAGS += -pg -lgcov --coverage
 profile: clean all
 
 clean:

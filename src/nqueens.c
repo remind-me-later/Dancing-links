@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <dlx.h>
 
-#define N 8
+#define N 12
 #define NDIAGONALS (N - 2) * 2 + 1
 #define NELEMENTS 2 * (N + NDIAGONALS)
 #define NSUBSETS N * N
 
-#define STRINGL(X) ((X) <= 10) ? 3 * (X) : 30 + 4 * ((X) - 10) - 1
+#define STRINGL(X) (((X) <= 10) ? 3 * (X) : 30 + 4 * ((X) - 10)) + 1
 #define CPOSITION (N <= 10) ? 3 : 4
 #define CFILESRANKS STRINGL(N)
 #define CDIAGONALS STRINGL(NDIAGONALS)
@@ -26,7 +26,7 @@ main(void)
 		for (j = 0; j < N; ++j)
 			sprintf(position[i][j], "%c%u", 97 + j, N - i);
 
-	dlx_universe u = dlx_create_universe(NELEMENTS, NSUBSETS, 32);
+	dlx_universe u = dlx_create_universe();
 
 	/* Generate file and rank names */
 	for (i = 0; i < N; ++i) {
@@ -45,8 +45,8 @@ main(void)
 	for (i = len = 0; i < NDIAGONALS; ++i) {
 		unsigned int tmp;
 
-		sprintf(diagonals + len, "A%u,", i);
-		tmp = sprintf(reverse_diagonals + len, "B%u,", i);
+		sprintf(diagonals + len, "A%u%c", i, '\0');
+		tmp = sprintf(reverse_diagonals + len, "B%u%c", i, '\0');
 
 		dlx_add_constraint(u, DLX_SECONDARY, diagonals + len);
 		dlx_add_constraint(u, DLX_SECONDARY, reverse_diagonals + len);

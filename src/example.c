@@ -9,7 +9,7 @@ main(void)
 	char *constraints[] = {"1", "2", "3", "4", "5", "6", "7"};
 
 	/* Setup universe. */
-	dlx_universe u = dlx_create_universe(7, 6, 1);
+	dlx_universe u = dlx_create_universe();
 
 	/* Add constraints */
 	dlx_add_constraint(u, DLX_PRIMARY, constraints[0]);

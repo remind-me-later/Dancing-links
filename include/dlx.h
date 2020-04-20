@@ -10,9 +10,7 @@ typedef struct Universe *dlx_universe;
 
 /* Functions */
 
-struct Universe *dlx_create_universe(unsigned int elements,
-                                     unsigned int subsets,
-                                     unsigned int solutions);
+struct Universe *dlx_create_universe();
 
 void dlx_delete_universe(struct Universe *universe);
 
