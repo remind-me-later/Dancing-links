@@ -3,7 +3,7 @@ lib/
 
 # object files
 obj/
-.out
+*.out
 
 # binaries
 bin/
