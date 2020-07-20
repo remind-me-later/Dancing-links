@@ -18,7 +18,8 @@ LDFLAGS += -Llib
 
 .PHONY: all directories debug profile clean 
 
-all: directories $(LIB_DIR)/libdlx.a $(BIN_DIR)/nqueens $(BIN_DIR)/example
+all: directories $(LIB_DIR)/libdlx.a $(BIN_DIR)/nqueens $(BIN_DIR)/example \
+	$(BIN_DIR)/sudoku
 
 directories: $(OUT_DIR)
 
@@ -38,6 +39,9 @@ $(OUT_DIR):
 
 $(LIB_DIR)/libdlx.a: $(OBJ_DIR)/dlx.o
 	ar rcs $@ $^
+
+$(BIN_DIR)/sudoku: $(OBJ_DIR)/sudoku.o $(OBJ_DIR)/dlx.o
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 $(BIN_DIR)/nqueens: $(OBJ_DIR)/nqueens.o $(OBJ_DIR)/dlx.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@

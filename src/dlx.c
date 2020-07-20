@@ -17,7 +17,7 @@ struct Data {
 			unsigned int col_pos;
 		};
 		union {
-			char const_type;
+			char cons_type;
 			unsigned int size;
 		};
 	};
@@ -151,12 +151,12 @@ dlx_delete_universe(struct Universe *u)
 }
 
 void
-dlx_add_constraint(struct Universe *u, char const_type, void *ref)
+dlx_add_constraint(struct Universe *u, char cons_type, void *ref)
 {
 	struct Data cons;
 
 	cons.ref = ref;
-	cons.const_type = const_type;
+	cons.cons_type = cons_type;
 
 	vect_push(u->elems, cons);
 }
@@ -191,7 +191,7 @@ dlx_create_links(struct Universe *u)
 	for (i = 0; i < u->elems->size; ++i) {
 		SELF_UD(u->elems->data + i);
 
-		if (vect_at(u->elems, i).const_type == DLX_PRIMARY)
+		if (vect_at(u->elems, i).cons_type == DLX_PRIMARY)
 			APPEND_LR(u->elems->data + i, u->root.left);
 		else
 			SELF_LR(u->elems->data + i);
@@ -234,7 +234,7 @@ dlx_pop_solution(struct Universe *u)
 }
 
 void
-dlx_search(struct Universe *u, unsigned int nsol)
+dlx_recurse(struct Universe *u, unsigned int nsol)
 {
 	struct Data *c;
 
@@ -250,7 +250,7 @@ dlx_search(struct Universe *u, unsigned int nsol)
 
 		FOREACH(j, r, right) cover(j->column);
 
-		dlx_search(u, nsol);
+		dlx_recurse(u, nsol);
 
 		r = vect_pop(u->sol);
 		c = r->column;
@@ -262,6 +262,13 @@ dlx_search(struct Universe *u, unsigned int nsol)
 	}
 
 	uncover(c);
+}
+
+void
+dlx_search(struct Universe *u, unsigned int nsol)
+{
+	dlx_create_links(u);
+	dlx_recurse(u, nsol);
 }
 
 /* Printer functions */

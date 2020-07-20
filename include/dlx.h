@@ -19,8 +19,6 @@ void dlx_add_constraint(struct Universe *u, char primary, void *ref);
 void dlx_add_subset(struct Universe *universe, unsigned int size,
                     void *ref, ...);
 
-void dlx_create_links(struct Universe *u);
-
 void dlx_search(struct Universe *universe, unsigned int nsol);
 
 void *dlx_pop_solution(struct Universe *universe);

@@ -29,9 +29,6 @@ main(void)
 	dlx_add_subset(u, 4, "E", 1, 2, 5, 6);
 	dlx_add_subset(u, 2, "F", 1, 6);
 
-	/* Setup links */
-	dlx_create_links(u);
-
 	/* Look for solutions, specifying number of required solutions
 	 * (0 for all) */
 	dlx_search(u, 0);

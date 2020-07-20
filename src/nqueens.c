@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <dlx.h>
 
-#define N 12
+#define N 4
 #define NDIAGONALS (N - 2) * 2 + 1
 #define NELEMENTS 2 * (N + NDIAGONALS)
 #define NSUBSETS N * N
@@ -14,44 +14,64 @@
 int
 main(void)
 {
+	/* Indices */
 	unsigned int i, j;
 
+	/* Constraint and subset names */
 	char position[N][N][CPOSITION], files[CFILESRANKS], ranks[CFILESRANKS],
 	     diagonals[CDIAGONALS], reverse_diagonals[CDIAGONALS];
 
-	unsigned int len = 0;
 
 	/* Generate position names */
 	for (i = 0; i < N; ++i)
 		for (j = 0; j < N; ++j)
-			sprintf(position[i][j], "%c%u", 97 + j, N - i);
+			sprintf(position[i][j], "%c%u%c", 'a' + j, N - i, '\0');
 
+	/* Create universe */
 	dlx_universe u = dlx_create_universe();
 
-	/* Generate file and rank names */
-	for (i = 0; i < N; ++i) {
-		unsigned int tmp;
+	/* Current length of string and temporal variable */
+	unsigned int len = 0, tmp;
 
-		sprintf(files + len, "F%u%c", i, '\0');
-		tmp = sprintf(ranks + len, "R%u%c", i, '\0');
+	/* Generate files and ranks */
+	for (i = 0; i < N; ++i) {
+		tmp = sprintf(files + len, "F%u%c", i, '\0');
 
 		dlx_add_constraint(u, DLX_PRIMARY, files + len);
+
+		len += tmp;
+	}
+
+	len = 0;
+
+	for (i = 0; i < N; ++i) {
+		tmp = sprintf(ranks + len, "R%u%c", i, '\0');
+
 		dlx_add_constraint(u, DLX_PRIMARY, ranks + len);
 
 		len += tmp;
 	}
 
-	/* Generate diagonal names */
-	for (i = len = 0; i < NDIAGONALS; ++i) {
-		unsigned int tmp;
 
-		sprintf(diagonals + len, "A%u%c", i, '\0');
-		tmp = sprintf(reverse_diagonals + len, "B%u%c", i, '\0');
+	/* Generate diagonals */
+	len = 0;
+
+	for (i = 0; i < NDIAGONALS; ++i) {
+		tmp = sprintf(diagonals + len, "A%u%c", i, '\0');
 
 		dlx_add_constraint(u, DLX_SECONDARY, diagonals + len);
+
+		len += tmp;
+	}
+
+	len = 0;
+
+	for (i = 0; i < NDIAGONALS; ++i) {
+		tmp = sprintf(reverse_diagonals + len, "B%u%c", i, '\0');
+
 		dlx_add_constraint(u, DLX_SECONDARY, reverse_diagonals + len);
 
-		len = tmp;
+		len += tmp;
 	}
 
 	/* fill corners */
@@ -96,12 +116,11 @@ main(void)
 			               (4 * N - 4) + (N - 1 - j + i));
 		}
 
-	dlx_create_links(u);
-
 	dlx_search(u, 0);
 
 	puts("Universe:");
 	dlx_print_universe(u, "%s", "%s");
+	puts("");
 
 	puts("Solutions:");
 	dlx_print_solutions(u, "%s");
