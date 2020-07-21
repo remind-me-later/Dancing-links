@@ -286,7 +286,7 @@ dlx_print_universe(struct Universe *u, char *cformat, char *ssformat)
 	}
 
 	printf(cformat, vect_at(u->elems, i).ref);
-	printf("}\n");
+	puts("}\n");
 
 	for (i = 0; i < u->subsets->size; ++i) {
 		printf(ssformat, vect_at(vect_at(u->subsets, i), 0).ref);

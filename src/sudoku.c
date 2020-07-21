@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <dlx.h>
 
+/* Number of rows and columns */
 #define N 9
 #define NSUBSETS 729
 #define NCONSTRAINTS 324
