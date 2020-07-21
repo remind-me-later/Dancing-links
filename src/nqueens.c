@@ -2,7 +2,7 @@
 #include <dlx.h>
 
 /* Number of queens */
-#define N 4
+#define N 8
 
 /*
  * The n queens problem is the puzzle of placing n queens on an n*n chessboard
@@ -30,7 +30,12 @@
  *
  *
  * The first thing we'll do is count the number of files, ranks, diagonals and
- * reverse diagonals, by definition the number of ranks and files is equal to N.
+ * reverse diagonals, by definition the number of ranks and files is equal to N
+ */
+
+#define NUMBER_OF_RANKS_AND_FILES (N)
+
+/*
  * Since the board is symmetric we will have the same number of diagonals as
  * reverse diagonals, to get the numbers of diagonals we note that for:
  *
@@ -64,28 +69,29 @@
  *
  * d(1) = 0     d(2) = 1        d(n) = d(n - 1) + 2
  *
- * We're gonna prove by induction that d(n) = 2(n - 1) - 1 for n >= 3.
- * We have that for n = 3
+ * We're gonna prove by induction that d(n) = 2n - 3 for n >= 3. We have
+ * that for n = 3
  *
- *      d(3) = d(3 - 1) + 2 = 3 = 2(3 - 1) - 1
+ *      d(3) = d(3 - 1) + 2 = 3 = 2*3 - 3
  *
  * Suppose the statement proven for n, then
  *
- *      d(n + 1) = d(n) + 2 = 2n - 1            =>
- *      d(n) = 2n - 1 - 2 = 2(n - 1) - 1        QED
+ *      d(n + 1) = d(n) + 2 = 2(n + 1) - 3    =>
+ *      d(n) = 2n - 1 - 2 = 2n - 3            QED
  *
- * We have found that the number of diagonals is 2(n - 1) - 1
+ * We have found that the number of diagonals is 2n - 3
  */
 
-#define NDIAGONALS 2 * (N - 1) - 1
+#define NUMBER_OF_DIAGONALS 2 * (N) - 3
 
 /*
  * The number of squares is of course n^2
  */
 
-#define NSQUARES N * N
+#define NSQUARES (N) * (N)
 
-/* Now that we have determined some useful properties of our n chess board we
+/*
+ * Now that we have determined some useful properties of our n chess board we
  * can start trying to solve the problem. To use DLX we need to transform
  * the n queens problem into an exact cover one. To do this we consider four
  * types of constraints, when a queen is placed on one of the squares she will
@@ -156,8 +162,8 @@
  */
 
 #define FILE_INDEX(i, j) (j)
-#define RANK_INDEX(i, j) (i) + N
-#define DIAG_INDEX(i, j) (i) + (j) + 2*N - 1
+#define RANK_INDEX(i, j) (i) + (N)
+#define DIAG_INDEX(i, j) (i) + (j) + 2*(N) - 1
 
 /*
  * The parentheses are necessary on the next one, e.g. without the parentheses
@@ -188,7 +194,7 @@
  *
  */
 
-#define REV_DIAG_INDEX(i, j) (i) - (j) + 5*(N - 1)
+#define REV_DIAG_INDEX(i, j) (i) - (j) + 5*((N) - 1)
 
 /*
  * Once we have done this, we can search for solutions by calling the DLX
@@ -206,21 +212,22 @@
  * a null character at the end. If X > 0 the numbers from 9 onwards
  * need 2 characters to be printed.
  */
-#define STRINGL(X) (((X) <= 10) ? 3 * (X) : 30 + 4 * ((X) - 10)) + 1
+#define STRING_LENGTH(X) (((X) <= 10) ? 3 * (X) : 30 + 4 * ((X) - 10)) + 1
 
-/* Number of characters in the pos names */
+/* Number of characters in the position names */
 #define POSITION_NAME_LENGTH (N <= 10) ? 3 : 4
 
 /* Number of characters in the files/ranks and diagonals */
-#define FILES_AND_RANKS_NAME_LENGTH STRINGL(N)
-#define DIAGONALS_NAME_LENGTH STRINGL(NDIAGONALS)
+#define FILES_AND_RANKS_NAME_LENGTH STRING_LENGTH(NUMBER_OF_RANKS_AND_FILES)
+#define DIAGONALS_NAME_LENGTH STRING_LENGTH(NUMBER_OF_DIAGONALS)
 
 /*
  * Function used to generate constraints and add them to a given universe,
  * is called 4 times, one for each type of constraint.
  */
 void
-gen_constraints(dlx_universe u, int const_type, char id, char *names, int n)
+gen_constraints(dlx_universe u, int const_type, char id, char *names,
+                unsigned int n)
 {
 	/* Loop index */
 	unsigned int i;
@@ -297,10 +304,14 @@ main(void)
 	 * depend on this ordering to indicate their elements
 	 */
 
-	gen_constraints(u, DLX_PRIMARY,   'F', file_names, N);
-	gen_constraints(u, DLX_PRIMARY,   'R', rank_names, N);
-	gen_constraints(u, DLX_SECONDARY, 'A', diagonal_names, NDIAGONALS);
-	gen_constraints(u, DLX_SECONDARY, 'B', rev_diagonal_names, NDIAGONALS);
+	gen_constraints(u, DLX_PRIMARY,
+	                'F', file_names, NUMBER_OF_RANKS_AND_FILES);
+	gen_constraints(u, DLX_PRIMARY,
+	                'R', rank_names, NUMBER_OF_RANKS_AND_FILES);
+	gen_constraints(u, DLX_SECONDARY,
+	                'A', diagonal_names, NUMBER_OF_DIAGONALS);
+	gen_constraints(u, DLX_SECONDARY,
+	                'B', rev_diagonal_names, NUMBER_OF_DIAGONALS);
 
 	/*
 	 * Fill corners, subsets with only 3 elements
