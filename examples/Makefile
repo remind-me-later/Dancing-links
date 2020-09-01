@@ -1,21 +1,21 @@
-BIN_DIR = bin
-LIB_DIR = lib
-SRC_DIR = src
-OBJ_DIR = obj
-TEST_DIR = tests
-PROF_DIR = prof
+BIN_DIR = ../bin
+LIB_DIR = ../lib
+SRC_DIR = .
+OBJ_DIR = ../obj
+TEST_DIR = ../tests
+PROF_DIR = ../prof
 
-OUT_DIR = $(OBJ_DIR) $(LIB_DIR)
+OUT_DIR = $(OBJ_DIR) $(BIN_DIR)
 
 CWARN = -Wall -Wextra -Werror -pedantic -std=c11
-CFLAGS = -DNDEBUG -Ofast -s -flto
-CPPFLAGS += -Iinclude
-LDFLAGS +=
-LDLIBS +=
+CFLAGS = -DNDEBUG -O3 -s -flto
+CPPFLAGS += -I../include
+LDFLAGS += -L$(LIB_DIR)
+LDLIBS += -ldlx
 
-.PHONY: all dir debug profile clean example
+.PHONY: all debug profile clean 
 
-all: dir $(LIB_DIR)/libdlx.a 
+all: dir $(BIN_DIR)/example $(BIN_DIR)/nqueens $(BIN_DIR)/sudoku
 
 debug: CFLAGS = $(CWARN) -DDEBUG -O0 -g3 -fsanitize=address -fsanitize=undefined
 debug: LDFLAGS += -fsanitize=address -fsanitize=undefined
@@ -28,16 +28,13 @@ profile: clean all
 clean:
 	$(RM) $(OBJ)
 
-example: all
-	$(MAKE) -C examples
-
-dir: | $(OUT_DIR)
+dir: $(OUT_DIR)
 
 $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 
-$(LIB_DIR)/libdlx.a: $(OBJ_DIR)/dlx.o 
-	ar rcs $@ $^
+$(BIN_DIR)/%: $(OBJ_DIR)/%.o
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
