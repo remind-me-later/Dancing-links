@@ -16,7 +16,7 @@ obj/dlx.o: src/dlx.c | obj
 
 # examples
 # --------
-example: lib/libdlx.a bin/example bin/nqueens bin/sudoku 
+example: lib/libdlx.a bin/simple_example bin/nqueens bin/sudoku 
 
 bin/%: obj/%.o | bin
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
