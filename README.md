@@ -18,8 +18,6 @@ make example
 ```
 The example programs will be put in the `bin` folder.
 
-The debug and profile targets compile the program to be analyzed by Valgrind and gprof respectively.
-
 ## Examples
 
 You can find examples of the use of the library in the 'examples' folder.
