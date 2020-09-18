@@ -1,43 +1,43 @@
-BIN_DIR = bin
-LIB_DIR = lib
-SRC_DIR = src
-OBJ_DIR = obj
-TEST_DIR = tests
-PROF_DIR = prof
-
-OUT_DIR = $(OBJ_DIR) $(LIB_DIR)
-
-CWARN = -Wall -Wextra -Werror -pedantic -std=c11
-CFLAGS = -DNDEBUG -Ofast -s -flto
+CWARN = -Wall -Wextra -Werror -pedantic
+CFLAGS = -std=c11 -O3 -s -flto -march=native -MMD $(CWARN)
 CPPFLAGS += -Iinclude
-LDFLAGS +=
-LDLIBS +=
+LDFLAGS += -Llib
+LDLIBS += -ldlx
 
-.PHONY: all dir debug profile clean example
+all: lib/libdlx.a 
 
-all: dir $(LIB_DIR)/libdlx.a 
-
-debug: CFLAGS = $(CWARN) -DDEBUG -O0 -g3 -fsanitize=address -fsanitize=undefined
-debug: LDFLAGS += -fsanitize=address -fsanitize=undefined
-debug: clean all
-
-profile: CFLAGS = -pg -fno-inline -fprofile-generate=$(PROF_DIR)
-profile: LDFLAGS += -pg -lgcov --coverage
-profile: clean all
-
-clean:
-	$(RM) $(OBJ)
-
-example: all
-	$(MAKE) -C examples
-
-dir: | $(OUT_DIR)
-
-$(OUT_DIR):
-	mkdir -p $(OUT_DIR)
-
-$(LIB_DIR)/libdlx.a: $(OBJ_DIR)/dlx.o 
+# library
+# -------
+lib/libdlx.a: obj/dlx.o | lib
 	ar rcs $@ $^
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+obj/dlx.o: src/dlx.c | obj
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+# examples
+# --------
+example: lib/libdlx.a bin/example bin/nqueens bin/sudoku 
+
+bin/%: obj/%.o | bin
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+obj/%.o: examples/%.c | obj
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+# folders
+# -------
+bin:
+	mkdir -p bin
+
+lib:
+	mkdir -p lib
+
+obj:
+	mkdir -p obj
+
+clean:
+	$(RM) lib/libdlx.a obj/* bin/*
+
+-include $(OBJ:.o=.d)
+
+.PHONY: all clean example

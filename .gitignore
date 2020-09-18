@@ -1,15 +1,11 @@
-# libraries
+# library
 lib/
 
 # object files
 obj/
-*.out
 
 # binaries
 bin/
-
-# profiling
-prof/
 
 # configuration
 .clangd
