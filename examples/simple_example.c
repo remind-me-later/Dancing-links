@@ -17,19 +17,19 @@
 // Let's use the library to find all the exact covers of `X`.
 // First, of course, we need to include the library and `stdio.h` to print
 
-#include <stdio.h>
 #include <dlx.h>
+#include <stdio.h>
 
 // The code is pretty simple, first we create an array with the names
 // of the elements in our universe `X` and ask for a new universe, then
 // we add the constraints and the subsets to the created universe and finally
-// we call `dlx_search` to search for solutions. For printing we use the functions
-// provided by the library.
+// we call `dlx_search` to search for solutions. For printing we use the
+// functions provided by the library.
 
 int main(void) {
-	char *constraints[] = {"1", "2", "3", "4", "5", "6", "7"};
+	char *constraints[] = { "1", "2", "3", "4", "5", "6", "7" };
 
-	dlx_universe X = dlx_create_universe();
+	dlx_univ_t X = dlx_create_universe();
 
 	dlx_add_constraint(X, DLX_PRIMARY, constraints[0]);
 	dlx_add_constraint(X, DLX_PRIMARY, constraints[1]);

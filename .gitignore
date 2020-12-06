@@ -7,6 +7,10 @@ obj/
 # binaries
 bin/
 
+# notes
+*.md
+
 # configuration
 .clangd
+.cache
 *.json

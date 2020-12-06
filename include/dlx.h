@@ -6,26 +6,26 @@
 
 /* Objects */
 
-typedef struct Universe *dlx_universe;
+typedef struct Universe *dlx_univ_t;
 
 /* Functions */
 
-struct Universe *dlx_create_universe();
+dlx_univ_t dlx_create_universe();
 
-void dlx_delete_universe(struct Universe *universe);
+void dlx_delete_universe(dlx_univ_t u);
 
-void dlx_add_constraint(struct Universe *u, char primary, void *ref);
+void dlx_add_constraint(dlx_univ_t u, char primary, void *ref);
 
-void dlx_add_subset(struct Universe *universe, unsigned int size,
-                    void *ref, ...);
+void dlx_add_subset(dlx_univ_t u, unsigned int size, void *ref, ...);
 
-void dlx_search(struct Universe *universe, unsigned int nsol);
+void dlx_search(dlx_univ_t u, unsigned int nsol);
 
-void *dlx_pop_solution(struct Universe *universe);
+void *dlx_pop_solution(dlx_univ_t u, unsigned int *size);
 
-void dlx_print_universe(struct Universe *universe, char *cformat,
-                        char *ssformat);
+void dlx_print_universe(dlx_univ_t u, char *cfmt, char *ssfmt);
 
-void dlx_print_solutions(struct Universe *u, char *format);
+void dlx_print_solutions(dlx_univ_t u, char *fmt);
+
+unsigned int dlx_found_solutions(struct Universe *u);
 
 #endif

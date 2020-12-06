@@ -1,0 +1,66 @@
+---
+
+BasedOnStyle: webkit
+IndentWidth: 8
+ColumnLimit: 79
+UseTab: ForIndentation
+
+---
+Language: Cpp
+
+# Align all
+AlignAfterOpenBracket:        Align
+AlignConsecutiveAssignments:  true
+AlignConsecutiveDeclarations: true
+AlignConsecutiveMacros:       true
+AlignEscapedNewlines:         Left
+AlignOperands:                true
+AlignTrailingComments:        true
+
+AllowAllArgumentsOnNextLine:  true
+AllowAllParametersOfDeclarationOnNextLine: true
+
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine:        false
+AlwaysBreakAfterReturnType:          None # mmm...
+AlwaysBreakBeforeMultilineStrings:   false
+
+BinPackArguments: true
+BinPackParameters: true
+
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces:          Attach
+BreakBeforeTernaryOperators: true
+BreakStringLiterals: true
+
+ForEachMacros: ['FOREACH']
+
+IncludeBlocks: Regroup
+
+IndentGotoLabels: false
+
+IndentPPDirectives: AfterHash
+IndentWrappedFunctionNames: false
+
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+
+PointerAlignment: Right
+
+SortIncludes: true
+
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeSquareBrackets: false
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInCStyleCastParentheses: false
+SpacesInConditionalStatement: false
+SpacesInContainerLiterals: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false

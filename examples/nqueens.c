@@ -59,9 +59,9 @@
 // To denote the queens positions we will use both chess's algebraic notation
 // and the traditional C bidimensional array notation.
 //
-// The C array notation is as follows, we will use two indices i and j, starting
-// from the first denoting the row and the second the column, starting by the
-// upper left corner.
+// The C array notation is as follows, we will use two indices i and j,
+// starting from the first denoting the row and the second the column, starting
+// by the upper left corner.
 //
 // 	     j0  j1  j2  j3
 // 	    +---+---+---+---+
@@ -74,8 +74,8 @@
 // 	i3  |   |   | Q |   |
 // 	    +---+---+---+---+
 //
-// The algebraic notation consists of labeling the columns with letters, starting
-// from a, and the rows with numbers from 1
+// The algebraic notation consists of labeling the columns with letters,
+// starting from a, and the rows with numbers from 1
 //
 // 	  +---+---+---+---+
 // 	4 |   | Q |   |   |
@@ -166,7 +166,7 @@
 //
 // The number of diagonals is then 2n - 3.
 
-#define NUMBER_OF_DIAGONALS 2*(N) - 3
+#define NUMBER_OF_DIAGONALS 2 * (N)-3
 
 // And the number of squares is of course n^2.
 
@@ -177,8 +177,8 @@
 // Now that we have determined some useful properties of our n chess board we
 // can start trying to solve the problem.
 //
-// Of course our objective is to transform it to an exact cover problem to be able
-// to solve it using the dancing links technique.
+// Of course our objective is to transform it to an exact cover problem to be
+// able to solve it using the dancing links technique.
 //
 // Our constraints are the rows, columns, diagonals and reverse diagonals,
 // when a queen is placed on one no other queen can be placed on the same
@@ -205,13 +205,13 @@
 // and reverse diagonal must be covered.
 //
 // To deal with this we will use secondary constraints, the difference between
-// primary and secondary constraints is that the second must be covered _at most_
-// once, while the first must be covered _exactly_ once.
+// primary and secondary constraints is that the second must be covered _at
+// most_ once, while the first must be covered _exactly_ once.
 //
-// With these new types of constraints at our disposal we see that the solutions
-// to our problem are given by setting rows and columns as primary constraints,
-// if we place n queens necessarily we will cover all rows and columns, while
-// diagonals are secondary constraints.
+// With these new types of constraints at our disposal we see that the
+// solutions to our problem are given by setting rows and columns as primary
+// constraints, if we place n queens necessarily we will cover all rows and
+// columns, while diagonals are secondary constraints.
 //
 // Here is the exact cover matrix for n = 3, the rows represent the subsets
 // and the columns the constraints, the zeroes are omitted
@@ -245,8 +245,8 @@
 
 #define FILE_INDEX(i, j)     (j)
 #define RANK_INDEX(i, j)     (i) + (N)
-#define DIAG_INDEX(i, j)     (i) + (j) + 2*(N) - 1
-#define REV_DIAG_INDEX(i, j) (i) - (j) + 5*((N) - 1)
+#define DIAG_INDEX(i, j)     (i) + (j) + 2 * (N)-1
+#define REV_DIAG_INDEX(i, j) (i) - (j) + 5 * ((N)-1)
 
 // ## Implementation
 //
@@ -254,8 +254,8 @@
 // First we include `stdio.h` to print and of course `dlx.h` to find solutions
 // for the exact cover problem.
 
-#include <stdio.h>
 #include <dlx.h>
+#include <stdio.h>
 
 // The following is an utility macro to determine the sum of the length of
 // the names of the constraints, or more simply put the space all of our
@@ -272,33 +272,28 @@
 // we go over X > 10 every constraint needs and additional character
 // to be printed.
 
-#define STRING_LENGTH(X) (((X) <= 10) ? 3 * (X) : 30 + 4 * ((X) - 10)) + 1
+#define STRING_LENGTH(X) (((X) <= 10) ? 3 * (X) : 30 + 4 * ((X)-10)) + 1
 
 // An analogous reasoning holds to compute the number of characters in the
 // position names
 
 #define POSITION_NAME_LENGTH (N <= 10) ? 3 : 4
 
-// With the previous macros now it's easy to calculate the length of th names of
-// the files, ranks and diagonal identifiers
+// With the previous macros now it's easy to calculate the length of th names
+// of the files, ranks and diagonal identifiers
 
 #define FILES_AND_RANKS_NAME_LENGTH STRING_LENGTH(NUMBER_OF_RANKS_AND_FILES)
-#define DIAGONALS_NAME_LENGTH STRING_LENGTH(NUMBER_OF_DIAGONALS)
+#define DIAGONALS_NAME_LENGTH       STRING_LENGTH(NUMBER_OF_DIAGONALS)
 
 // Let's define another function for convenience, it will generate the names
 // of the constraints for each given type of constraint
 
-void
-gen_constraints(dlx_universe u, int const_type, char id, char *names,
-                unsigned int n)
-{
-	// Loop index
-	unsigned int i;
-
+void gen_constraints(dlx_univ_t u, int const_type, char id, char *names,
+                     unsigned int n) {
 	// Current length of string and temporal variable
 	unsigned int len = 0, tmp;
 
-	for (i = 0; i < n; ++i) {
+	for (unsigned int i = 0; i < n; ++i) {
 		// Generate constraint name, zero terminated
 		tmp = sprintf(names + len, "%c%u%c", id, i + 1, '\0');
 
@@ -314,126 +309,117 @@ gen_constraints(dlx_universe u, int const_type, char id, char *names,
 // With everything set we can finally start
 
 int main(void) {
-	// Loop indices
-	unsigned int i, j;
-
-	// Position*subset names are stored individually for ease of access
+	// Position names are stored individually for ease of access
 	// when creating the subsets
 	char pos[N][N][POSITION_NAME_LENGTH];
 
 	// Files and ranks names are all stored in the same array, separated
 	// by null characters
 	char file_names[FILES_AND_RANKS_NAME_LENGTH],
-	     rank_names[FILES_AND_RANKS_NAME_LENGTH];
+	    rank_names[FILES_AND_RANKS_NAME_LENGTH];
 
 	// Same for diagonals and reverse diagonals names
 	char diagonal_names[DIAGONALS_NAME_LENGTH],
-	     rev_diagonal_names[DIAGONALS_NAME_LENGTH];
-
+	    rev_diagonal_names[DIAGONALS_NAME_LENGTH];
 
 	// Generate position names
-	for (i = 0; i < N; ++i) {
-		for (j = 0; j < N; ++j) {
+	for (unsigned int i = 0; i < N; ++i) {
+		for (unsigned int j = 0; j < N; ++j) {
 			sprintf(pos[i][j], "%c%u%c", 'a' + j, i + 1, '\0');
 		}
 	}
 
 	// Create universe
-	dlx_universe u = dlx_create_universe();
+	dlx_univ_t u = dlx_create_universe();
 
-// Generate files, ranks and diagonals and add them to the universe,
-// the order of the constraints depends on the order of addition
-// so changing the order can give incorrect results since the subsets
-// depend on this ordering to indicate their elements
+	// Generate files, ranks and diagonals and add them to the universe,
+	// the order of the constraints depends on the order of addition
+	// so changing the order can give incorrect results since the subsets
+	// depend on this ordering to indicate their elements
 
-	gen_constraints(u, DLX_PRIMARY,
-	                'F', file_names, NUMBER_OF_RANKS_AND_FILES);
-	gen_constraints(u, DLX_PRIMARY,
-	                'R', rank_names, NUMBER_OF_RANKS_AND_FILES);
-	gen_constraints(u, DLX_SECONDARY,
-	                'A', diagonal_names, NUMBER_OF_DIAGONALS);
-	gen_constraints(u, DLX_SECONDARY,
-	                'B', rev_diagonal_names, NUMBER_OF_DIAGONALS);
+	gen_constraints(u, DLX_PRIMARY, 'F', file_names,
+	                NUMBER_OF_RANKS_AND_FILES);
+	gen_constraints(u, DLX_PRIMARY, 'R', rank_names,
+	                NUMBER_OF_RANKS_AND_FILES);
+	gen_constraints(u, DLX_SECONDARY, 'A', diagonal_names,
+	                NUMBER_OF_DIAGONALS);
+	gen_constraints(u, DLX_SECONDARY, 'B', rev_diagonal_names,
+	                NUMBER_OF_DIAGONALS);
 
+	// Fill corners clockwise starting from the top left square,
+	// we need to do this because corners are the only subsets with only 3
+	// elements, while all the others have 4
+	//
+	// 	  +---+---+---+---+
+	// 	4 | x |   |   | x |
+	// 	  +---+---+---+---+
+	// 	3 |   |   |   |   |
+	// 	  +---+---+---+---+
+	// 	2 |   |   |   |   |
+	// 	  +---+---+---+---+
+	// 	1 | x |   |   | x |
+	// 	  +---+---+---+---+
+	// 	    a   b   c   d
+	//
+	// We add them one by one
 
-// Fill corners clockwise starting from the top left square,
-// we need to do this because corners are the only subsets with only 3 
-// elements, while all the others have 4
-//
-// 	  +---+---+---+---+
-// 	4 | x |   |   | x |
-// 	  +---+---+---+---+
-// 	3 |   |   |   |   |
-// 	  +---+---+---+---+
-// 	2 |   |   |   |   |
-// 	  +---+---+---+---+
-// 	1 | x |   |   | x |
-// 	  +---+---+---+---+
-// 	    a   b   c   d
-//
-// We add them one by one
+	dlx_add_subset(u, 3, pos[N - 1][0], FILE_INDEX(N - 1, 0),
+	               RANK_INDEX(N - 1, 0), DIAG_INDEX(N - 1, 0));
 
-	dlx_add_subset(u, 3, pos[N - 1][0],
-	               FILE_INDEX(N - 1, 0), RANK_INDEX(N - 1, 0),
-	               DIAG_INDEX(N - 1, 0));
+	dlx_add_subset(u, 3, pos[N - 1][N - 1], FILE_INDEX(N - 1, N - 1),
+	               RANK_INDEX(N - 1, N - 1), REV_DIAG_INDEX(N - 1, N - 1));
 
-	dlx_add_subset(u, 3, pos[N - 1][N - 1],
-	               FILE_INDEX(N - 1, N - 1), RANK_INDEX(N - 1, N - 1),
-	               REV_DIAG_INDEX(N - 1, N - 1));
+	dlx_add_subset(u, 3, pos[0][N - 1], FILE_INDEX(0, N - 1),
+	               RANK_INDEX(0, N - 1), DIAG_INDEX(0, N - 1));
 
-	dlx_add_subset(u, 3, pos[0][N - 1],
-	               FILE_INDEX(0, N - 1), RANK_INDEX(0, N - 1),
-	               DIAG_INDEX(0, N - 1));
-
-	dlx_add_subset(u, 3, pos[0][0],
-	               FILE_INDEX(0, 0), RANK_INDEX(0, 0),
+	dlx_add_subset(u, 3, pos[0][0], FILE_INDEX(0, 0), RANK_INDEX(0, 0),
 	               REV_DIAG_INDEX(0, 0));
 
-// Fill inner columns
-//
-// 	  +---+---+---+---+
-// 	4 |   | x | x |   |
-// 	  +---+---+---+---+
-// 	3 |   | x | x |   |
-// 	  +---+---+---+---+
-// 	2 |   | x | x |   |
-// 	  +---+---+---+---+
-// 	1 |   | x | x |   |
-// 	  +---+---+---+---+
-// 	    a   b   c   d
-//
-// We use loops to add the remaining subsets
+	// Fill inner columns
+	//
+	// 	  +---+---+---+---+
+	// 	4 |   | x | x |   |
+	// 	  +---+---+---+---+
+	// 	3 |   | x | x |   |
+	// 	  +---+---+---+---+
+	// 	2 |   | x | x |   |
+	// 	  +---+---+---+---+
+	// 	1 |   | x | x |   |
+	// 	  +---+---+---+---+
+	// 	    a   b   c   d
+	//
+	// We use loops to add the remaining subsets
 
-	for (i = 1; i < N - 1; ++i) {
-		for (j = 0; j < N; ++j) {
-			dlx_add_subset(u, 4, pos[i][j],
-			               FILE_INDEX(i, j), RANK_INDEX(i, j),
-			               DIAG_INDEX(i, j), REV_DIAG_INDEX(i, j));
+	for (unsigned int i = 1; i < N - 1; ++i) {
+		for (unsigned int j = 0; j < N; ++j) {
+			dlx_add_subset(u, 4, pos[i][j], FILE_INDEX(i, j),
+			               RANK_INDEX(i, j), DIAG_INDEX(i, j),
+			               REV_DIAG_INDEX(i, j));
 		}
 	}
 
-// Fill remaining lateral columns
-//
-// 	  +---+---+---+---+
-// 	4 |   |   |   |   |
-// 	  +---+---+---+---+
-// 	3 | x |   |   | x |
-// 	  +---+---+---+---+
-// 	2 | x |   |   | x |
-// 	  +---+---+---+---+
-// 	1 |   |   |   |   |
-// 	  +---+---+---+---+
-// 	    a   b   c   d
+	// Fill remaining lateral columns
+	//
+	// 	  +---+---+---+---+
+	// 	4 |   |   |   |   |
+	// 	  +---+---+---+---+
+	// 	3 | x |   |   | x |
+	// 	  +---+---+---+---+
+	// 	2 | x |   |   | x |
+	// 	  +---+---+---+---+
+	// 	1 |   |   |   |   |
+	// 	  +---+---+---+---+
+	// 	    a   b   c   d
 
-	for (i = 0; i < N; i += N - 1) {
-		for (j = 1; j < N - 1; ++j) {
-			dlx_add_subset(u, 4, pos[i][j],
-			               FILE_INDEX(i, j), RANK_INDEX(i, j),
-			               DIAG_INDEX(i, j), REV_DIAG_INDEX(i, j));
+	for (unsigned int i = 0; i < N; i += N - 1) {
+		for (unsigned int j = 1; j < N - 1; ++j) {
+			dlx_add_subset(u, 4, pos[i][j], FILE_INDEX(i, j),
+			               RANK_INDEX(i, j), DIAG_INDEX(i, j),
+			               REV_DIAG_INDEX(i, j));
 		}
 	}
 
-// We can now use the algorithm to search for solutions and print them
+	// We can now use the algorithm to search for solutions and print them
 
 	// Search for all solutions
 	dlx_search(u, 0);
