@@ -78,6 +78,8 @@ unsigned int vect_ins(vect *v, unsigned int pos) {
 /* or VECT_GENERATE_NAME(type, name) for pointer types or multiple qualifiers
  */
 
+#define vect_clear(v) v->size = 0
+
 #define vect_at(v, pos) v->data[pos]
 
 #define vect_push(v, value)                                               \

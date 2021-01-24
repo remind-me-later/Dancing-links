@@ -41,6 +41,7 @@ struct Universe {
 
 	uint solutions;
 	void (*sol_handler)(void **, uint);
+	vect_void *cur_sol;
 };
 
 // Macros
@@ -130,6 +131,7 @@ struct Universe *dlx_create_universe(void (*sol_handler)(void **, uint)) {
 	u->subsets = vect_init_vect_data(0);
 
 	u->sol       = vect_init_data_ptr(0);
+	u->cur_sol   = vect_init_void(0);
 	u->solutions = 0;
 
 	u->sol_handler = sol_handler;
@@ -147,7 +149,7 @@ void dlx_delete_universe(struct Universe *u) {
 
 	vect_free(u->elems);
 	vect_free(u->subsets);
-
+	vect_free(u->cur_sol);
 	vect_free(u->sol);
 
 	free(u);
@@ -209,13 +211,13 @@ void dlx_create_links(struct Universe *u) {
 }
 
 void **dlx_get_solution(struct Universe *u) {
-	void **new_sol = malloc(u->sol->size * sizeof(void *));
+	vect_clear(u->cur_sol);
 
 	for (uint i = 0; i < u->sol->size; ++i) {
-		new_sol[i] = vect_at(u->sol, i)->ref;
+		vect_push(u->cur_sol, vect_at(u->sol, i)->ref);
 	}
 
-	return new_sol;
+	return u->cur_sol->data;
 }
 
 void dlx_recurse(struct Universe *u, uint nsol) {
