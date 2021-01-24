@@ -20,16 +20,31 @@
 #include <dlx.h>
 #include <stdio.h>
 
-// The code is pretty simple, first we create an array with the names
-// of the elements in our universe `X` and ask for a new universe, then
-// we add the constraints and the subsets to the created universe and finally
-// we call `dlx_search` to search for solutions. For printing we use the
-// functions provided by the library.
+// We first make a fucntion to print the solutions given
+// by the library, it receives an array of void pointers
+// and the size of the array
+
+void print_solution(void **sol, unsigned int size) {
+	char **      solution = (char **)sol;
+	unsigned int i;
+
+	printf("S* = {");
+
+	for (i = 0; i + 1 < size; ++i)
+		printf("%s, ", solution[i]);
+
+	printf("%s}\n", solution[i]);
+}
+
+// First we create an array with the names of the elements in our 
+// universe `X` and a new universe, then we add the constraints and 
+// the subsets to the created universe.  Finally we call `dlx_search` 
+// to search for solutions.
 
 int main(void) {
 	char *constraints[] = { "1", "2", "3", "4", "5", "6", "7" };
 
-	dlx_univ_t X = dlx_create_universe();
+	dlx_univ_t X = dlx_create_universe(&print_solution);
 
 	dlx_add_constraint(X, DLX_PRIMARY, constraints[0]);
 	dlx_add_constraint(X, DLX_PRIMARY, constraints[1]);
@@ -48,15 +63,20 @@ int main(void) {
 	dlx_add_subset(X, 4, "E", 1, 2, 5, 6);
 	dlx_add_subset(X, 2, "F", 1, 6);
 
-	// Look for solutions, specifying the number of
-	// required solutions or 0 to look for all
-	dlx_search(X, 0);
+	// Print problem
+	puts("Let X := {1, 2, 3, 4, 5, 6, 7}\nand S := {A, B, C, D, E, F}");
+	puts("\nWhere");
+	puts("\tA := {1, 4, 7}");
+	puts("\tB := {1, 4}");
+	puts("\tC := {4, 5, 7}");
+	puts("\tD := {3, 5, 6}");
+	puts("\tE := {2, 3, 6, 7}");
+	puts("\tF := {2, 7}");
 
-	puts("Universe:\n");
-	dlx_print_universe(X, "%s", "%s");
+	printf("\nThe only exact cover of X is ");
 
-	puts("\nSolutions:\n");
-	dlx_print_solutions(X, "%s");
+	// Look for solutions, specifying the number of required solutions 
+	dlx_search(X, DLX_ALL);
 
 	dlx_delete_universe(X);
 

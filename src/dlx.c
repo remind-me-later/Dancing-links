@@ -3,6 +3,7 @@
 #include "vector.h"
 
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -19,14 +20,13 @@ typedef struct dlx_data_struct {
 			uint                    col_pos;
 		};
 		union {
-			char cons_type;
+			bool cons_type;
 			uint size;
 		};
 	};
 } dlx_data_t;
 
 VECT_GENERATE_NAME(void *, void)
-VECT_GENERATE_NAME(vect_void *, vect_void)
 VECT_GENERATE_NAME(dlx_data_t, data)
 VECT_GENERATE_NAME(vect_data *, vect_data)
 VECT_GENERATE_NAME(dlx_data_t *, data_ptr)
@@ -37,8 +37,10 @@ struct Universe {
 	vect_data *     elems;
 	vect_vect_data *subsets;
 
-	vect_data_ptr * sol;
-	vect_vect_void *sols;
+	vect_data_ptr *sol;
+
+	uint solutions;
+	void (*sol_handler)(void **, uint);
 };
 
 // Macros
@@ -117,7 +119,7 @@ dlx_data_t *choose_column(struct Universe *u) {
 
 // Library functions
 
-struct Universe *dlx_create_universe() {
+struct Universe *dlx_create_universe(void (*sol_handler)(void **, uint)) {
 	struct Universe *u = malloc(sizeof(*u));
 
 	if (u == NULL) {
@@ -127,8 +129,10 @@ struct Universe *dlx_create_universe() {
 	u->elems   = vect_init_data(0);
 	u->subsets = vect_init_vect_data(0);
 
-	u->sol  = vect_init_data_ptr(0);
-	u->sols = vect_init_vect_void(0);
+	u->sol       = vect_init_data_ptr(0);
+	u->solutions = 0;
+
+	u->sol_handler = sol_handler;
 
 	SELF_UD(&u->root);
 	SELF_LR(&u->root);
@@ -141,24 +145,19 @@ void dlx_delete_universe(struct Universe *u) {
 		vect_free(vect_at(u->subsets, i));
 	}
 
-	for (uint i = 0; i < u->sols->size; ++i) {
-		vect_free(vect_at(u->sols, i));
-	}
-
 	vect_free(u->elems);
 	vect_free(u->subsets);
 
 	vect_free(u->sol);
-	vect_free(u->sols);
 
 	free(u);
 }
 
-void dlx_add_constraint(struct Universe *u, char cons_type, void *ref) {
+void dlx_add_constraint(struct Universe *u, bool primary, void *ref) {
 	dlx_data_t cons;
 
 	cons.ref       = ref;
-	cons.cons_type = cons_type;
+	cons.cons_type = primary;
 
 	vect_push(u->elems, cons);
 }
@@ -209,29 +208,26 @@ void dlx_create_links(struct Universe *u) {
 	}
 }
 
-void dlx_push_solution(struct Universe *u) {
-	vect_void *new_sol = vect_init_void(u->sol->size);
-	vect_push(u->sols, new_sol);
+void **dlx_get_solution(struct Universe *u) {
+	void **new_sol = malloc(u->sol->size * sizeof(void *));
 
 	for (uint i = 0; i < u->sol->size; ++i) {
-		vect_push(new_sol, vect_at(u->sol, i)->ref);
+		new_sol[i] = vect_at(u->sol, i)->ref;
 	}
-}
 
-unsigned int dlx_found_solutions(struct Universe *u) {
-	return u->sols->size;
-}
-
-void *dlx_pop_solution(struct Universe *u, unsigned int *size) {
-	*size = vect_at(u->sols, u->sols->size - 1)->size;
-	return vect_at(u->sols, --u->sols->size)->data;
+	return new_sol;
 }
 
 void dlx_recurse(struct Universe *u, uint nsol) {
 	dlx_data_t *c;
 
 	if (u->root.right == &u->root) {
-		dlx_push_solution(u);
+		int    size     = u->sol->size;
+		void **solution = dlx_get_solution(u);
+
+		(*u->sol_handler)(solution, size);
+
+		++u->solutions;
 		return;
 	}
 
@@ -251,7 +247,7 @@ void dlx_recurse(struct Universe *u, uint nsol) {
 
 		FOREACH (j, r, left) { uncover(j->column); }
 
-		if (nsol && u->sols->size == nsol) {
+		if (nsol && u->solutions == nsol) {
 			break;
 		}
 	}
@@ -262,50 +258,4 @@ void dlx_recurse(struct Universe *u, uint nsol) {
 void dlx_search(struct Universe *u, uint nsol) {
 	dlx_create_links(u);
 	dlx_recurse(u, nsol);
-}
-
-/* Printer functions */
-
-void dlx_print_universe(struct Universe *u, char *cfmt, char *ssfmt) {
-	uint i, j;
-
-	printf("U = {");
-
-	for (i = 0; i < u->elems->size - 1; ++i) {
-		printf(cfmt, vect_at(u->elems, i).ref);
-		printf(", ");
-	}
-
-	printf(cfmt, vect_at(u->elems, i).ref);
-	puts("}\n");
-
-	for (i = 0; i < u->subsets->size; ++i) {
-		printf(ssfmt, vect_at(vect_at(u->subsets, i), 0).ref);
-		printf(" = {");
-
-		for (j = 0; j < vect_at(u->subsets, i)->size - 1; ++j) {
-			printf(cfmt,
-			       vect_at(vect_at(u->subsets, i), j).column->ref);
-			printf(", ");
-		}
-
-		printf(cfmt, vect_at(vect_at(u->subsets, i), j).column->ref);
-		printf("}\n");
-	}
-}
-
-void dlx_print_solutions(struct Universe *u, char *fmt) {
-	uint i, j;
-
-	for (i = 0; i < u->sols->size; ++i) {
-		printf("S%u* = {", i + 1);
-
-		for (j = 0; j + 1 < vect_at(u->sols, i)->size; ++j) {
-			printf(fmt, vect_at(vect_at(u->sols, i), j));
-			printf(", ");
-		}
-
-		printf(fmt, vect_at(vect_at(u->sols, i), j));
-		printf("}\n");
-	}
 }

@@ -306,6 +306,9 @@ void gen_constraints(dlx_univ_t u, int const_type, char id, char *names,
 	}
 }
 
+// And a function for printing solutions
+void print_solution(void **sol, unsigned int size);
+
 // With everything set we can finally start
 
 int main(void) {
@@ -330,7 +333,7 @@ int main(void) {
 	}
 
 	// Create universe
-	dlx_univ_t u = dlx_create_universe();
+	dlx_univ_t u = dlx_create_universe(&print_solution);
 
 	// Generate files, ranks and diagonals and add them to the universe,
 	// the order of the constraints depends on the order of addition
@@ -421,18 +424,26 @@ int main(void) {
 
 	// We can now use the algorithm to search for solutions and print them
 
+	printf("Solutions to the %u-queens problem:\n\n", N);
+
 	// Search for all solutions
 	dlx_search(u, 0);
-
-	// Print universe, subsets and solutions
-	puts("Universe and subsets\n");
-	dlx_print_universe(u, "%s", "%s");
-
-	puts("\nSolutions\n");
-	dlx_print_solutions(u, "%s");
 
 	// Cleanup
 	dlx_delete_universe(u);
 
 	return 0;
+}
+
+void print_solution(void **sol, unsigned int size) {
+	char **      solution = (char **)sol;
+	unsigned int i;
+	static unsigned int sol_number = 1;
+
+	printf("S_%u* = {", sol_number++);
+
+	for (i = 0; i + 1 < size; ++i)
+		printf("%s, ", solution[i]);
+
+	printf("%s}\n", solution[i]);
 }
