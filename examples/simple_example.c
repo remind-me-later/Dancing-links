@@ -42,17 +42,9 @@ void print_solution(void **sol, unsigned int size) {
 // to search for solutions.
 
 int main(void) {
-	char *constraints[] = { "1", "2", "3", "4", "5", "6", "7" };
-
 	dlx_univ_t X = dlx_create_universe(&print_solution);
 
-	dlx_add_constraint(X, DLX_PRIMARY, constraints[0]);
-	dlx_add_constraint(X, DLX_PRIMARY, constraints[1]);
-	dlx_add_constraint(X, DLX_PRIMARY, constraints[2]);
-	dlx_add_constraint(X, DLX_PRIMARY, constraints[3]);
-	dlx_add_constraint(X, DLX_PRIMARY, constraints[4]);
-	dlx_add_constraint(X, DLX_PRIMARY, constraints[5]);
-	dlx_add_constraint(X, DLX_PRIMARY, constraints[6]);
+	dlx_add_constraints(X, DLX_PRIMARY, 7);
 
 	// Add the subsets of S, specifying the number of elements,
 	// the name, and the position of the elements in the universe

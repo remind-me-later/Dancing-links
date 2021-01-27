@@ -12,12 +12,14 @@ typedef unsigned int uint;
 // Structs
 typedef struct dlx_data_struct {
 	struct dlx_data_struct *up, *down, *left, *right;
-	void *                  ref;
 
 	union {
-		union {
-			struct dlx_data_struct *column;
-			uint                    col_pos;
+		struct {
+			union {
+				struct dlx_data_struct *column;
+				uint                    col_pos;
+			};
+			void *ref;
 		};
 		union {
 			bool cons_type;
@@ -155,13 +157,13 @@ void dlx_delete_universe(struct Universe *u) {
 	free(u);
 }
 
-void dlx_add_constraint(struct Universe *u, bool primary, void *ref) {
+void dlx_add_constraints(struct Universe *u, bool primary, size_t number) {
 	dlx_data_t cons;
 
-	cons.ref       = ref;
 	cons.cons_type = primary;
 
-	vect_push(u->elems, cons);
+	while (number--)
+		vect_push(u->elems, cons);
 }
 
 void dlx_add_subset(struct Universe *u, uint size, void *ref, ...) {

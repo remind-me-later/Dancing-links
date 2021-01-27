@@ -61,7 +61,6 @@ int main(void) {
 
 	/* Constraint and subset names */
 	unsigned int position_number[N][N][N];
-	char cells[CONSLEN], rows[CONSLEN], cols[CONSLEN], blocks[CONSLEN];
 
 	/*
 	 * Generate position/number names with the format "r2c7#2"
@@ -96,9 +95,6 @@ int main(void) {
 	/* Create universe */
 	dlx_univ_t u = dlx_create_universe(&print_solution);
 
-	/* Current length of string and temporal variable */
-	unsigned int len = 0, tmp;
-
 	/*
 	 * Generate constraints: cell, column, row and block.
 	 * The name of each constraint is formatted as "C2#4" where
@@ -106,55 +102,7 @@ int main(void) {
 	 * (X, R, C, B denote cell, row, column and block respectively)
 	 * and the one after '#' the value
 	 */
-	for (i = 0; i < N; ++i) {
-		for (j = 0; j < N; ++j) {
-			tmp = sprintf(cells + len, "X%u#%u%c", i + 1, j + 1,
-			              '\0');
-
-			dlx_add_constraint(u, DLX_PRIMARY, cells + len);
-
-			len += tmp;
-		}
-	}
-
-	len = 0;
-
-	for (i = 0; i < N; ++i) {
-		for (j = 0; j < N; ++j) {
-			tmp = sprintf(rows + len, "R%u#%u%c", i + 1, j + 1,
-			              '\0');
-
-			dlx_add_constraint(u, DLX_PRIMARY, rows + len);
-
-			len += tmp;
-		}
-	}
-
-	len = 0;
-
-	for (i = 0; i < N; ++i) {
-		for (j = 0; j < N; ++j) {
-			tmp = sprintf(cols + len, "C%u#%u%c", i + 1, j + 1,
-			              '\0');
-
-			dlx_add_constraint(u, DLX_PRIMARY, cols + len);
-
-			len += tmp;
-		}
-	}
-
-	len = 0;
-
-	for (i = 0; i < N; ++i) {
-		for (j = 0; j < N; ++j) {
-			tmp = sprintf(blocks + len, "B%u#%u%c", i + 1, j + 1,
-			              '\0');
-
-			dlx_add_constraint(u, DLX_PRIMARY, blocks + len);
-
-			len += tmp;
-		}
-	}
+	dlx_add_constraints(u, DLX_PRIMARY, N*N*4);
 
 	/* Add subsets, aka positions */
 	for (i = 0; i < N; ++i) {

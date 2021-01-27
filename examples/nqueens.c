@@ -256,6 +256,7 @@
 
 #include <dlx.h>
 #include <stdio.h>
+#include <string.h>
 
 // The following is an utility macro to determine the sum of the length of
 // the names of the constraints, or more simply put the space all of our
@@ -277,34 +278,13 @@
 // An analogous reasoning holds to compute the number of characters in the
 // position names
 
-#define POSITION_NAME_LENGTH (N <= 10) ? 3 : 4
+#define POSITION_NAME_LENGTH N / 10 + 4
 
 // With the previous macros now it's easy to calculate the length of th names
 // of the files, ranks and diagonal identifiers
 
 #define FILES_AND_RANKS_NAME_LENGTH STRING_LENGTH(NUMBER_OF_RANKS_AND_FILES)
 #define DIAGONALS_NAME_LENGTH       STRING_LENGTH(NUMBER_OF_DIAGONALS)
-
-// Let's define another function for convenience, it will generate the names
-// of the constraints for each given type of constraint
-
-void gen_constraints(dlx_univ_t u, int const_type, char id, char *names,
-                     unsigned int n) {
-	// Current length of string and temporal variable
-	unsigned int len = 0, tmp;
-
-	for (unsigned int i = 0; i < n; ++i) {
-		// Generate constraint name, zero terminated
-		tmp = sprintf(names + len, "%c%u%c", id, i + 1, '\0');
-
-		// Add constraint to universe with the generated name
-		dlx_add_constraint(u, const_type, names + len);
-
-		// The current length of the string is equal to the previous
-		// length plus the length of the new name
-		len += tmp;
-	}
-}
 
 // And a function for printing solutions
 void print_solution(void **sol, unsigned int size);
@@ -315,15 +295,6 @@ int main(void) {
 	// Position names are stored individually for ease of access
 	// when creating the subsets
 	char pos[N][N][POSITION_NAME_LENGTH];
-
-	// Files and ranks names are all stored in the same array, separated
-	// by null characters
-	char file_names[FILES_AND_RANKS_NAME_LENGTH],
-	    rank_names[FILES_AND_RANKS_NAME_LENGTH];
-
-	// Same for diagonals and reverse diagonals names
-	char diagonal_names[DIAGONALS_NAME_LENGTH],
-	    rev_diagonal_names[DIAGONALS_NAME_LENGTH];
 
 	// Generate position names
 	for (unsigned int i = 0; i < N; ++i) {
@@ -340,14 +311,10 @@ int main(void) {
 	// so changing the order can give incorrect results since the subsets
 	// depend on this ordering to indicate their elements
 
-	gen_constraints(u, DLX_PRIMARY, 'F', file_names,
-	                NUMBER_OF_RANKS_AND_FILES);
-	gen_constraints(u, DLX_PRIMARY, 'R', rank_names,
-	                NUMBER_OF_RANKS_AND_FILES);
-	gen_constraints(u, DLX_SECONDARY, 'A', diagonal_names,
-	                NUMBER_OF_DIAGONALS);
-	gen_constraints(u, DLX_SECONDARY, 'B', rev_diagonal_names,
-	                NUMBER_OF_DIAGONALS);
+	dlx_add_constraints(u, DLX_PRIMARY, NUMBER_OF_RANKS_AND_FILES);
+	dlx_add_constraints(u, DLX_PRIMARY, NUMBER_OF_RANKS_AND_FILES);
+	dlx_add_constraints(u, DLX_SECONDARY, NUMBER_OF_DIAGONALS);
+	dlx_add_constraints(u, DLX_SECONDARY, NUMBER_OF_DIAGONALS);
 
 	// Fill corners clockwise starting from the top left square,
 	// we need to do this because corners are the only subsets with only 3
@@ -423,7 +390,6 @@ int main(void) {
 	}
 
 	// We can now use the algorithm to search for solutions and print them
-
 	printf("Solutions to the %u-queens problem:\n\n", N);
 
 	// Search for all solutions
@@ -431,19 +397,48 @@ int main(void) {
 
 	// Cleanup
 	dlx_delete_universe(u);
-
-	return 0;
 }
 
 void print_solution(void **sol, unsigned int size) {
 	char **      solution = (char **)sol;
-	unsigned int i;
+	unsigned int i, j;
+	unsigned int row, col;
+	char board[N][N];
 	static unsigned int sol_number = 1;
 
-	printf("S_%u* = {", sol_number++);
+	memset(board, ' ', N*N);
+
+	printf("Solution %u: ", sol_number++);
 
 	for (i = 0; i + 1 < size; ++i)
 		printf("%s, ", solution[i]);
+	printf("%s.\n\n", solution[i]);
 
-	printf("%s}\n", solution[i]);
+	for (i = 0; i < size; ++i) {
+		row = solution[i][0] - 'a';
+		col = atoi(solution[i] + 1) - 1;
+		board[row][col] = 'Q';
+	}
+
+	for (i = 0; i < N; ++i) {
+		printf("   +---");
+		for (j = 1; j < N; ++j)
+			printf("+---");
+		printf("+\n");
+
+		printf("%*u | %c ", 2, N - i, board[i][0]);
+		for (j = 1; j < N; ++j)
+			printf("| %c ", board[i][j]);
+		printf("|\n");
+	}
+
+	printf("   +---");
+	for (j = 1; j < N; ++j)
+		printf("+---");
+	printf("+\n");
+
+	printf("     a ");
+	for (j = 1; j < N; ++j)
+		printf("  %c ", 'a' + j);
+	printf("\n\n");
 }
