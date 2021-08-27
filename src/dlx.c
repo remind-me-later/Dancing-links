@@ -178,7 +178,6 @@ void dlx_universe_delete(dlx_universe u) {
     }
 
     free(u->subsets);
-
     free(u->current_solution);
     free(u->solution_stack);
     free(u->column_headers);
@@ -203,12 +202,11 @@ void dlx_universe_add_subset(dlx_universe u, size_t size, void *ref, ...) {
 
     va_end(args);
 
-    u->subsets[u->subsets_size] = subset;
-    u->subsets_size++;
+    u->subsets[u->subsets_size++] = subset;
 }
 
 void **dlx_get_solution(dlx_universe u) {
-    for (unsigned int i = 0; i < u->solution_stack_size; ++i) {
+    for (size_t i = 0; i < u->solution_stack_size; ++i) {
 	u->current_solution[i] = u->solution_stack[i]->ref;
     }
 
@@ -228,15 +226,13 @@ void dlx_universe_search(dlx_universe u, unsigned int nsol) {
     cover(column);
 
     FOREACH(r, column, down) {
-	u->solution_stack[u->solution_stack_size] = r;
-	u->solution_stack_size++;
+	u->solution_stack[u->solution_stack_size++] = r;
 
 	FOREACH(j, r, right) { cover(j->column); }
 
 	dlx_universe_search(u, nsol);
 
-	u->solution_stack_size--;
-	r = u->solution_stack[u->solution_stack_size];
+	r = u->solution_stack[--u->solution_stack_size];
 
 	column = r->column;
 
