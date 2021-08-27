@@ -1,0 +1,12 @@
+-Wall
+-Wextra
+-Werror
+-pedantic
+-Wconversion
+-std=c17
+-O3
+-s
+-flto
+-march=native
+-MMD
+-Iinclude

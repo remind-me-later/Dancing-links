@@ -14,3 +14,4 @@ bin/
 .clangd
 .cache
 *.json
+.compile_flags.txt

@@ -24,53 +24,53 @@
 // by the library, it receives an array of void pointers
 // and the size of the array
 
-void print_solution(void **sol, unsigned int size) {
-	char **      solution = (char **)sol;
-	unsigned int i;
+void print_solution(void **sol, size_t size) {
+    char **solution = (char **)sol;
+    unsigned int i;
 
-	printf("S* = {");
+    printf("S* = {");
 
-	for (i = 0; i + 1 < size; ++i)
-		printf("%s, ", solution[i]);
+    for (i = 0; i + 1 < size; ++i) {
+	printf("%s, ", solution[i]);
+    }
 
-	printf("%s}\n", solution[i]);
+    printf("%s}\n", solution[i]);
 }
 
-// First we create an array with the names of the elements in our 
-// universe `X` and a new universe, then we add the constraints and 
-// the subsets to the created universe.  Finally we call `dlx_search` 
+// First we create an array with the names of the elements in our
+// universe `X` and a new universe, then we add the constraints and
+// the subsets to the created universe.  Finally we call `dlx_search`
 // to search for solutions.
 
 int main(void) {
-	dlx_univ_t X = dlx_create_universe(&print_solution);
+    dlx_universe universe = dlx_universe_new(&print_solution, 7, 0, 6);
 
-	dlx_add_constraints(X, DLX_PRIMARY, 7);
+    // Add the subsets of S, specifying the number of elements,
+    // the name, and the position of the elements in the universe
+    dlx_universe_add_subset(universe, 3, "A", 0, 3, 6);
+    dlx_universe_add_subset(universe, 2, "B", 0, 3);
+    dlx_universe_add_subset(universe, 3, "C", 3, 4, 6);
+    dlx_universe_add_subset(universe, 3, "D", 2, 4, 5);
+    dlx_universe_add_subset(universe, 4, "E", 1, 2, 5, 6);
+    dlx_universe_add_subset(universe, 2, "F", 1, 6);
 
-	// Add the subsets of S, specifying the number of elements,
-	// the name, and the position of the elements in the universe
-	dlx_add_subset(X, 3, "A", 0, 3, 6);
-	dlx_add_subset(X, 2, "B", 0, 3);
-	dlx_add_subset(X, 3, "C", 3, 4, 6);
-	dlx_add_subset(X, 3, "D", 2, 4, 5);
-	dlx_add_subset(X, 4, "E", 1, 2, 5, 6);
-	dlx_add_subset(X, 2, "F", 1, 6);
+    // Print problem
+    puts("Let X := {1, 2, 3, 4, 5, 6, 7}");
+    puts("and S := {A, B, C, D, E, F}");
+    puts("\nWhere:");
+    puts("\tA := {1, 4, 7}");
+    puts("\tB := {1, 4}");
+    puts("\tC := {4, 5, 7}");
+    puts("\tD := {3, 5, 6}");
+    puts("\tE := {2, 3, 6, 7}");
+    puts("\tF := {2, 7}");
 
-	// Print problem
-	puts("Let X := {1, 2, 3, 4, 5, 6, 7}\nand S := {A, B, C, D, E, F}");
-	puts("\nWhere");
-	puts("\tA := {1, 4, 7}");
-	puts("\tB := {1, 4}");
-	puts("\tC := {4, 5, 7}");
-	puts("\tD := {3, 5, 6}");
-	puts("\tE := {2, 3, 6, 7}");
-	puts("\tF := {2, 7}");
+    printf("\nThe only exact cover of X is ");
 
-	printf("\nThe only exact cover of X is ");
+    // Look for solutions, specifying the number of required solutions
+    dlx_universe_search(universe, DLX_ALL);
 
-	// Look for solutions, specifying the number of required solutions 
-	dlx_search(X, DLX_ALL);
+    dlx_universe_delete(universe);
 
-	dlx_delete_universe(X);
-
-	return 0;
+    return 0;
 }

@@ -108,12 +108,12 @@
 // Let's first define the number of queens we are interested in finding
 // solutions for we will call this number n
 
-#define N 8
+const unsigned int N = 8;
 
 // The first thing we'll do is count the number of files, ranks, diagonals and
 // reverse diagonals, by definition the number of ranks and files is equal to n
 
-#define NUMBER_OF_RANKS_AND_FILES (N)
+const unsigned int NUMBER_OF_RANKS_AND_FILES = N;
 
 // With that out of the way let's get to the harder bit.
 // Since the board is symmetric we will have the same number of diagonals as
@@ -166,11 +166,11 @@
 //
 // The number of diagonals is then 2n - 3.
 
-#define NUMBER_OF_DIAGONALS 2 * (N)-3
+const unsigned int NUMBER_OF_DIAGONALS = 2 * N - 3;
 
 // And the number of squares is of course n^2.
 
-#define NSQUARES (N) * (N)
+const unsigned int NSQUARES = N * N;
 
 // ## Representation as an exact cover problem
 //
@@ -243,10 +243,23 @@
 //
 // The proof is left as an exercise for the reader.
 
-#define FILE_INDEX(i, j)     (j)
-#define RANK_INDEX(i, j)     (i) + (N)
-#define DIAG_INDEX(i, j)     (i) + (j) + 2 * (N)-1
-#define REV_DIAG_INDEX(i, j) (i) - (j) + 5 * ((N)-1)
+unsigned int file_index(unsigned int i, unsigned int j) {
+    (void)i; // unused
+    return j;
+}
+
+unsigned int rank_index(unsigned int i, unsigned int j) {
+    (void)j; // unused
+    return i + N;
+}
+
+unsigned int diagonal_index(unsigned int i, unsigned int j) {
+    return i + j + 2 * N - 1;
+}
+
+unsigned int reverse_diagonal_index(unsigned int i, unsigned int j) {
+    return i - j + 5 * (N - 1);
+}
 
 // ## Implementation
 //
@@ -273,172 +286,193 @@
 // we go over X > 10 every constraint needs and additional character
 // to be printed.
 
-#define STRING_LENGTH(X) (((X) <= 10) ? 3 * (X) : 30 + 4 * ((X)-10)) + 1
+unsigned int STRING_LENGTH(unsigned int X) {
+    if (X <= 10) {
+	return 3 * X + 1;
+    } else {
+	return 30 + 4 * (X - 10) + 1;
+    }
+}
 
 // An analogous reasoning holds to compute the number of characters in the
 // position names
 
-#define POSITION_NAME_LENGTH N / 10 + 4
+const unsigned int POSITION_NAME_LENGTH = N / 10 + 4;
 
 // With the previous macros now it's easy to calculate the length of th names
 // of the files, ranks and diagonal identifiers
 
 #define FILES_AND_RANKS_NAME_LENGTH STRING_LENGTH(NUMBER_OF_RANKS_AND_FILES)
-#define DIAGONALS_NAME_LENGTH       STRING_LENGTH(NUMBER_OF_DIAGONALS)
+#define DIAGONALS_NAME_LENGTH STRING_LENGTH(NUMBER_OF_DIAGONALS)
 
 // And a function for printing solutions
-void print_solution(void **sol, unsigned int size);
+void print_solution(void **sol, size_t size);
 
 // With everything set we can finally start
 
 int main(void) {
-	// Position names are stored individually for ease of access
-	// when creating the subsets
-	char pos[N][N][POSITION_NAME_LENGTH];
+    // Position names are stored individually for ease of access
+    // when creating the subsets
+    char pos[N][N][POSITION_NAME_LENGTH];
 
-	// Generate position names
-	for (unsigned int i = 0; i < N; ++i) {
-		for (unsigned int j = 0; j < N; ++j) {
-			sprintf(pos[i][j], "%c%u%c", 'a' + j, i + 1, '\0');
-		}
+    // Generate position names
+    for (unsigned int i = 0; i < N; ++i) {
+	for (unsigned int j = 0; j < N; ++j) {
+	    sprintf(pos[i][j], "%c%u%c", 'a' + j, i + 1, '\0');
 	}
+    }
 
-	// Create universe
-	dlx_univ_t u = dlx_create_universe(&print_solution);
+    // Create universe and
+    // generate files, ranks and diagonals and add them to the universe,
+    // the order of the constraints depends on the order of addition
+    // so changing the order can give incorrect results since the subsets
+    // depend on this ordering to indicate their elements
+    dlx_universe u = dlx_universe_new(
+	&print_solution, NUMBER_OF_RANKS_AND_FILES * 2, NUMBER_OF_DIAGONALS * 2,
+	NSQUARES);
 
-	// Generate files, ranks and diagonals and add them to the universe,
-	// the order of the constraints depends on the order of addition
-	// so changing the order can give incorrect results since the subsets
-	// depend on this ordering to indicate their elements
+    // Fill corners clockwise starting from the top left square,
+    // we need to do this because corners are the only subsets with only 3
+    // elements, while all the others have 4
+    //
+    // 	  +---+---+---+---+
+    // 	4 | x |   |   | x |
+    // 	  +---+---+---+---+
+    // 	3 |   |   |   |   |
+    // 	  +---+---+---+---+
+    // 	2 |   |   |   |   |
+    // 	  +---+---+---+---+
+    // 	1 | x |   |   | x |
+    // 	  +---+---+---+---+
+    // 	    a   b   c   d
+    //
+    // We add them one by one
 
-	dlx_add_constraints(u, DLX_PRIMARY, NUMBER_OF_RANKS_AND_FILES);
-	dlx_add_constraints(u, DLX_PRIMARY, NUMBER_OF_RANKS_AND_FILES);
-	dlx_add_constraints(u, DLX_SECONDARY, NUMBER_OF_DIAGONALS);
-	dlx_add_constraints(u, DLX_SECONDARY, NUMBER_OF_DIAGONALS);
+    dlx_universe_add_subset(
+	u, 3, pos[N - 1][0], file_index(N - 1, 0), rank_index(N - 1, 0),
+	diagonal_index(N - 1, 0));
 
-	// Fill corners clockwise starting from the top left square,
-	// we need to do this because corners are the only subsets with only 3
-	// elements, while all the others have 4
-	//
-	// 	  +---+---+---+---+
-	// 	4 | x |   |   | x |
-	// 	  +---+---+---+---+
-	// 	3 |   |   |   |   |
-	// 	  +---+---+---+---+
-	// 	2 |   |   |   |   |
-	// 	  +---+---+---+---+
-	// 	1 | x |   |   | x |
-	// 	  +---+---+---+---+
-	// 	    a   b   c   d
-	//
-	// We add them one by one
+    dlx_universe_add_subset(
+	u, 3, pos[N - 1][N - 1], file_index(N - 1, N - 1),
+	rank_index(N - 1, N - 1), reverse_diagonal_index(N - 1, N - 1));
 
-	dlx_add_subset(u, 3, pos[N - 1][0], FILE_INDEX(N - 1, 0),
-	               RANK_INDEX(N - 1, 0), DIAG_INDEX(N - 1, 0));
+    dlx_universe_add_subset(
+	u, 3, pos[0][N - 1], file_index(0, N - 1), rank_index(0, N - 1),
+	diagonal_index(0, N - 1));
 
-	dlx_add_subset(u, 3, pos[N - 1][N - 1], FILE_INDEX(N - 1, N - 1),
-	               RANK_INDEX(N - 1, N - 1), REV_DIAG_INDEX(N - 1, N - 1));
+    dlx_universe_add_subset(
+	u, 3, pos[0][0], file_index(0, 0), rank_index(0, 0),
+	reverse_diagonal_index(0, 0));
 
-	dlx_add_subset(u, 3, pos[0][N - 1], FILE_INDEX(0, N - 1),
-	               RANK_INDEX(0, N - 1), DIAG_INDEX(0, N - 1));
+    // Fill inner columns
+    //
+    // 	  +---+---+---+---+
+    // 	4 |   | x | x |   |
+    // 	  +---+---+---+---+
+    // 	3 |   | x | x |   |
+    // 	  +---+---+---+---+
+    // 	2 |   | x | x |   |
+    // 	  +---+---+---+---+
+    // 	1 |   | x | x |   |
+    // 	  +---+---+---+---+
+    // 	    a   b   c   d
+    //
+    // We use loops to add the remaining subsets
 
-	dlx_add_subset(u, 3, pos[0][0], FILE_INDEX(0, 0), RANK_INDEX(0, 0),
-	               REV_DIAG_INDEX(0, 0));
-
-	// Fill inner columns
-	//
-	// 	  +---+---+---+---+
-	// 	4 |   | x | x |   |
-	// 	  +---+---+---+---+
-	// 	3 |   | x | x |   |
-	// 	  +---+---+---+---+
-	// 	2 |   | x | x |   |
-	// 	  +---+---+---+---+
-	// 	1 |   | x | x |   |
-	// 	  +---+---+---+---+
-	// 	    a   b   c   d
-	//
-	// We use loops to add the remaining subsets
-
-	for (unsigned int i = 1; i < N - 1; ++i) {
-		for (unsigned int j = 0; j < N; ++j) {
-			dlx_add_subset(u, 4, pos[i][j], FILE_INDEX(i, j),
-			               RANK_INDEX(i, j), DIAG_INDEX(i, j),
-			               REV_DIAG_INDEX(i, j));
-		}
+    for (unsigned int i = 1; i < N - 1; ++i) {
+	for (unsigned int j = 0; j < N; ++j) {
+	    dlx_universe_add_subset(
+		u, 4, pos[i][j], file_index(i, j), rank_index(i, j),
+		diagonal_index(i, j), reverse_diagonal_index(i, j));
 	}
+    }
 
-	// Fill remaining lateral columns
-	//
-	// 	  +---+---+---+---+
-	// 	4 |   |   |   |   |
-	// 	  +---+---+---+---+
-	// 	3 | x |   |   | x |
-	// 	  +---+---+---+---+
-	// 	2 | x |   |   | x |
-	// 	  +---+---+---+---+
-	// 	1 |   |   |   |   |
-	// 	  +---+---+---+---+
-	// 	    a   b   c   d
+    // Fill remaining lateral columns
+    //
+    // 	  +---+---+---+---+
+    // 	4 |   |   |   |   |
+    // 	  +---+---+---+---+
+    // 	3 | x |   |   | x |
+    // 	  +---+---+---+---+
+    // 	2 | x |   |   | x |
+    // 	  +---+---+---+---+
+    // 	1 |   |   |   |   |
+    // 	  +---+---+---+---+
+    // 	    a   b   c   d
 
-	for (unsigned int i = 0; i < N; i += N - 1) {
-		for (unsigned int j = 1; j < N - 1; ++j) {
-			dlx_add_subset(u, 4, pos[i][j], FILE_INDEX(i, j),
-			               RANK_INDEX(i, j), DIAG_INDEX(i, j),
-			               REV_DIAG_INDEX(i, j));
-		}
+    for (unsigned int i = 0; i < N; i += N - 1) {
+	for (unsigned int j = 1; j < N - 1; ++j) {
+	    dlx_universe_add_subset(
+		u, 4, pos[i][j], file_index(i, j), rank_index(i, j),
+		diagonal_index(i, j), reverse_diagonal_index(i, j));
 	}
+    }
 
-	// We can now use the algorithm to search for solutions and print them
-	printf("Solutions to the %u-queens problem:\n\n", N);
+    // We can now use the algorithm to search for solutions and print them
+    printf("Solutions to the %u-queens problem:\n\n", N);
 
-	// Search for all solutions
-	dlx_search(u, 0);
+    // Search for all solutions
+    dlx_universe_search(u, 0);
 
-	// Cleanup
-	dlx_delete_universe(u);
+    // Cleanup
+    dlx_universe_delete(u);
 }
 
-void print_solution(void **sol, unsigned int size) {
-	char **      solution = (char **)sol;
-	unsigned int i, j;
-	unsigned int row, col;
-	char board[N][N];
-	static unsigned int sol_number = 1;
+void print_solution(void **sol, size_t size) {
+    char **solution = (char **)sol;
+    unsigned int i, j;
+    unsigned int row, col;
+    char board[N][N];
+    static unsigned int sol_number = 1;
 
-	memset(board, ' ', N*N);
+    memset(board, ' ', N * N);
 
-	printf("Solution %u: ", sol_number++);
+    printf("Solution %u: ", sol_number);
+    sol_number += 1;
 
-	for (i = 0; i + 1 < size; ++i)
-		printf("%s, ", solution[i]);
-	printf("%s.\n\n", solution[i]);
+    for (i = 0; i + 1 < size; ++i) {
+	printf("%s, ", solution[i]);
+    }
 
-	for (i = 0; i < size; ++i) {
-		row = solution[i][0] - 'a';
-		col = atoi(solution[i] + 1) - 1;
-		board[row][col] = 'Q';
-	}
+    printf("%s.\n\n", solution[i]);
 
-	for (i = 0; i < N; ++i) {
-		printf("   +---");
-		for (j = 1; j < N; ++j)
-			printf("+---");
-		printf("+\n");
+    for (i = 0; i < size; ++i) {
+	row = (unsigned int)solution[i][0] - 'a';
+	col = (unsigned int)atoi(solution[i] + 1) - 1;
+	board[row][col] = 'Q';
+    }
 
-		printf("%*u | %c ", 2, N - i, board[i][0]);
-		for (j = 1; j < N; ++j)
-			printf("| %c ", board[i][j]);
-		printf("|\n");
-	}
-
+    for (i = 0; i < N; ++i) {
 	printf("   +---");
-	for (j = 1; j < N; ++j)
-		printf("+---");
+
+	for (j = 1; j < N; ++j) {
+	    printf("+---");
+	}
+
 	printf("+\n");
 
-	printf("     a ");
-	for (j = 1; j < N; ++j)
-		printf("  %c ", 'a' + j);
-	printf("\n\n");
+	printf("%*u | %c ", 2, N - i, board[i][0]);
+
+	for (j = 1; j < N; ++j) {
+	    printf("| %c ", board[i][j]);
+	}
+
+	printf("|\n");
+    }
+
+    printf("   +---");
+
+    for (j = 1; j < N; ++j) {
+	printf("+---");
+    }
+
+    printf("+\n");
+
+    printf("     a ");
+
+    for (j = 1; j < N; ++j) {
+	printf("  %c ", 'a' + j);
+    }
+
+    printf("\n\n");
 }

@@ -2,123 +2,111 @@
 #include <stdio.h>
 
 /* Number of rows and columns */
-#define N               9
-#define NSUBSETS        729
-#define NCONSTRAINTS    324
-#define CONSLEN         (81 * 5)
-#define SUBSET_NAME_LEN 7
+const unsigned char N = 9;
 
 void print_sudoku(char sudoku[N][N]) {
-	unsigned int i, j;
+    printf("     1 2 3   4 5 6   7 8 9\n");
+    printf("   +-------+-------+-------+\n");
 
-	printf("     1 2 3   4 5 6   7 8 9\n");
-	printf("   +-------+-------+-------+\n");
+    for (unsigned int i = 0; i < N; ++i) {
+	printf(" %u | ", i + 1);
 
-	for (i = 0; i < N; ++i) {
-		printf(" %u | ", i + 1);
+	for (unsigned int j = 0; j < N; ++j) {
+	    printf("%c ", sudoku[i][j]);
 
-		for (j = 0; j < N; ++j) {
-			printf("%c ", sudoku[i][j]);
-
-			if (j % 3 == 2) {
-				printf("| ");
-			}
-		}
-
-		if (i % 3 == 2) {
-			printf("\n   +-------+-------+-------+\n");
-		} else {
-			putchar('\n');
-		}
+	    if (j % 3 == 2) {
+		printf("| ");
+	    }
 	}
+
+	if (i % 3 == 2) {
+	    printf("\n   +-------+-------+-------+\n");
+	} else {
+	    putchar('\n');
+	}
+    }
 }
 
-void print_solution(void **sol, unsigned int size) {
-	unsigned int **solution = (unsigned int **)sol;
-	char           sudoku[N][N];
-	unsigned int   i;
-	unsigned int   row, col, number;
-	static unsigned int sol_number = 1;
+void print_solution(void **sol, size_t size) {
+    unsigned int **solution = (unsigned int **)sol;
+    char sudoku[N][N];
+    static unsigned int sol_number = 1;
 
-	printf("Grid %u:\n\n", sol_number++);
+    printf("Grid %u:\n\n", sol_number++);
 
-	for (i = 0; i < size; ++i) {
-		row    = (*solution[i] / 100) % 10;
-		col    = (*solution[i] / 10) % 10;
-		number = *solution[i] % 10;
+    for (unsigned int i = 0; i < size; ++i) {
+	unsigned int row = (*solution[i] / 100) % 10;
+	unsigned int col = (*solution[i] / 10) % 10;
+	unsigned int number = *solution[i] % 10;
 
-		sudoku[row][col] = number + '0';
-	}
+	sudoku[row][col] = (char)number + '0';
+    }
 
-	print_sudoku(sudoku);
+    print_sudoku(sudoku);
 
-	printf("\n");
+    printf("\n");
 }
 
 int main(void) {
-	/* Indices */
-	unsigned int i, j, k;
+    /* Constraint and subset names */
+    unsigned int position_number[N][N][N];
 
-	/* Constraint and subset names */
-	unsigned int position_number[N][N][N];
+    /*
+     * Generate position/number names with the format "r2c7#2"
+     * where 'r' indicates the row, 'c' the column and '#' the value,
+     * so the previous string would be:
+     *
+     *           1 2 3   4 5 6   7 8 9
+     *         +-------+-------+-------+
+     *       1 |       |       |       |
+     *       2 |       |       | 2     |
+     *       3 |       |       |       |
+     *         +-------+-------+-------+
+     *       4 |       |       |       |
+     *       5 |       |       |       |
+     *       6 |       |       |       |
+     *         +-------+-------+-------+
+     *       7 |       |       |       |
+     *       8 |       |       |       |
+     *       9 |       |       |       |
+     *         +-------+-------+-------+
+     */
 
-	/*
-	 * Generate position/number names with the format "r2c7#2"
-	 * where 'r' indicates the row, 'c' the column and '#' the value,
-	 * so the previous string would be:
-	 *
-	 *           1 2 3   4 5 6   7 8 9
-	 *         +-------+-------+-------+
-	 *       1 |       |       |       |
-	 *       2 |       |       | 2     |
-	 *       3 |       |       |       |
-	 *         +-------+-------+-------+
-	 *       4 |       |       |       |
-	 *       5 |       |       |       |
-	 *       6 |       |       |       |
-	 *         +-------+-------+-------+
-	 *       7 |       |       |       |
-	 *       8 |       |       |       |
-	 *       9 |       |       |       |
-	 *         +-------+-------+-------+
-	 */
-
-	for (i = 0; i < N; ++i) {
-		for (j = 0; j < N; ++j) {
-			for (k = 0; k < N; ++k) {
-				position_number[i][j][k] =
-				    i * 100 + j * 10 + k + 1;
-			}
-		}
+    for (unsigned int i = 0; i < N; ++i) {
+	for (unsigned int j = 0; j < N; ++j) {
+	    for (unsigned int k = 0; k < N; ++k) {
+		position_number[i][j][k] = i * 100 + j * 10 + k + 1;
+	    }
 	}
+    }
 
-	/* Create universe */
-	dlx_univ_t u = dlx_create_universe(&print_solution);
+    /* Create universe */
+    dlx_universe universe =
+	dlx_universe_new(&print_solution, N * N * 4, 0, N * N * N);
 
-	/*
-	 * Generate constraints: cell, column, row and block.
-	 * The name of each constraint is formatted as "C2#4" where
-	 * the number after 'C' is the column
-	 * (X, R, C, B denote cell, row, column and block respectively)
-	 * and the one after '#' the value
-	 */
-	dlx_add_constraints(u, DLX_PRIMARY, N*N*4);
+    /*
+     * Generate constraints: cell, column, row and block.
+     * The name of each constraint is formatted as "C2#4" where
+     * the number after 'C' is the column
+     * (X, R, C, B denote cell, row, column and block respectively)
+     * and the one after '#' the value
+     */
 
-	/* Add subsets, aka positions */
-	for (i = 0; i < N; ++i) {
-		for (j = 0; j < N; ++j) {
-			for (k = 0; k < N; ++k) {
-				dlx_add_subset(
-				    u, 4, &position_number[i][j][k], i * 9 + j,
-				    81 + i * 9 + k, 162 + j * 9 + k,
-				    243 + (i / 3) * 27 + (j / 3) * 9 + k);
-			}
-		}
+    /* Add subsets, aka positions */
+    for (unsigned int i = 0; i < N; ++i) {
+	for (unsigned int j = 0; j < N; ++j) {
+	    for (unsigned int k = 0; k < N; ++k) {
+		dlx_universe_add_subset(
+		    universe, 4, &position_number[i][j][k], i * 9 + j,
+		    81 + i * 9 + k, 162 + j * 9 + k,
+		    243 + (i / 3) * 27 + (j / 3) * 9 + k);
+	    }
 	}
+    }
 
-	dlx_search(u, 10);
+    dlx_universe_search(universe, 10);
 
-	dlx_delete_universe(u);
+    dlx_universe_delete(universe);
 
-	return 0;
+    return 0;
 }

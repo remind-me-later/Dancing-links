@@ -1,27 +1,24 @@
 #ifndef __DLX_H__
 #define __DLX_H__
 
-#include <stdbool.h>
 #include <stdlib.h>
-
-#define DLX_PRIMARY true
-#define DLX_SECONDARY false
 
 #define DLX_ALL 0
 
 /* Objects */
 
-typedef struct Universe *dlx_univ_t;
+typedef struct dlx_universe_struct *dlx_universe;
 
 /* Functions */
-dlx_univ_t dlx_create_universe(void (*sol_handler)(void**, unsigned int));
+dlx_universe dlx_universe_new(
+    void (*solution_handler)(void **, size_t),
+    size_t number_of_primary_constraints,
+    size_t number_of_secondary_constraints, size_t number_of_subsets);
 
-void dlx_delete_universe(dlx_univ_t u);
+void dlx_universe_delete(dlx_universe u);
 
-void dlx_add_constraints(dlx_univ_t u, bool primary, size_t number);
+void dlx_universe_add_subset(dlx_universe u, size_t size, void *ref, ...);
 
-void dlx_add_subset(dlx_univ_t u, unsigned int size, void *ref, ...);
-
-void dlx_search(dlx_univ_t u, unsigned int nsol);
+void dlx_universe_search(dlx_universe u, unsigned int nsol);
 
 #endif
