@@ -15,10 +15,12 @@ dlx_universe dlx_universe_new(
     size_t number_of_primary_constraints,
     size_t number_of_secondary_constraints, size_t number_of_subsets);
 
-void dlx_universe_delete(dlx_universe u);
+void dlx_universe_delete(dlx_universe universe);
 
-void dlx_universe_add_subset(dlx_universe u, size_t size, void *ref, ...);
+void dlx_universe_add_subset(
+    dlx_universe universe, size_t subset_size, void *subset_label, ...);
 
-void dlx_universe_search(dlx_universe u, unsigned int nsol);
+void dlx_universe_search(
+    dlx_universe universe, unsigned int desired_number_of_solutions);
 
 #endif

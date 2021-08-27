@@ -11,7 +11,7 @@ typedef struct dlx_node_struct {
     union {
 	struct {
 	    struct dlx_node_struct *column;
-	    void *ref;
+	    void *subset_label;
 	};
 	unsigned int size;
     };
@@ -31,7 +31,7 @@ struct dlx_universe_struct {
 
     void (*solution_handler)(void **, size_t);
 
-    size_t solutions;
+    unsigned int number_of_solutions_found;
     void **current_solution;
 };
 
@@ -149,7 +149,7 @@ dlx_universe dlx_universe_new(
 	return NULL;
     }
 
-    u->solutions = 0;
+    u->number_of_solutions_found = 0;
 
     u->solution_handler = solution_handler;
 
@@ -184,17 +184,19 @@ void dlx_universe_delete(dlx_universe u) {
     free(u);
 }
 
-void dlx_universe_add_subset(dlx_universe u, size_t size, void *ref, ...) {
+void dlx_universe_add_subset(
+    dlx_universe universe, size_t subset_size, void *subset_label, ...) {
     va_list args;
-    dlx_node *subset = malloc(sizeof(dlx_node) * size);
+    dlx_node *subset = malloc(sizeof(dlx_node) * subset_size);
 
-    va_start(args, ref);
+    va_start(args, subset_label);
 
     append_self_horizontally(subset);
 
-    for (unsigned int i = 0; i < size; ++i) {
-	subset[i].ref = ref;
-	subset[i].column = u->column_headers + va_arg(args, unsigned int);
+    for (unsigned int i = 0; i < subset_size; ++i) {
+	subset[i].subset_label = subset_label;
+	subset[i].column =
+	    universe->column_headers + va_arg(args, unsigned int);
 	append_above(subset + i, subset[i].column);
 	append_left(subset + i, subset[0].left);
 	++subset[i].column->size;
@@ -202,43 +204,48 @@ void dlx_universe_add_subset(dlx_universe u, size_t size, void *ref, ...) {
 
     va_end(args);
 
-    u->subsets[u->subsets_size++] = subset;
+    universe->subsets[universe->subsets_size++] = subset;
 }
 
-void **dlx_get_solution(dlx_universe u) {
-    for (size_t i = 0; i < u->solution_stack_size; ++i) {
-	u->current_solution[i] = u->solution_stack[i]->ref;
+void **dlx_get_solution(dlx_universe universe) {
+    for (size_t i = 0; i < universe->solution_stack_size; ++i) {
+	universe->current_solution[i] =
+	    universe->solution_stack[i]->subset_label;
     }
 
-    return u->current_solution;
+    return universe->current_solution;
 }
 
-void dlx_universe_search(dlx_universe u, unsigned int nsol) {
-    if (u->root.right == &u->root) {
-	(*u->solution_handler)(dlx_get_solution(u), u->solution_stack_size);
+void dlx_universe_search(
+    dlx_universe universe, unsigned int desired_number_of_solutions) {
+    if (universe->root.right == &universe->root) {
+	(*universe->solution_handler)(
+	    dlx_get_solution(universe), universe->solution_stack_size);
 
-	++u->solutions;
+	++universe->number_of_solutions_found;
 	return;
     }
 
-    dlx_node *column = choose_column(u);
+    dlx_node *column = choose_column(universe);
 
     cover(column);
 
     FOREACH(r, column, down) {
-	u->solution_stack[u->solution_stack_size++] = r;
+	universe->solution_stack[universe->solution_stack_size++] = r;
 
 	FOREACH(j, r, right) { cover(j->column); }
 
-	dlx_universe_search(u, nsol);
+	dlx_universe_search(universe, desired_number_of_solutions);
 
-	r = u->solution_stack[--u->solution_stack_size];
+	r = universe->solution_stack[--universe->solution_stack_size];
 
 	column = r->column;
 
 	FOREACH(j, r, left) { uncover(j->column); }
 
-	if (nsol && u->solutions == nsol) {
+	if (desired_number_of_solutions &&
+	    universe->number_of_solutions_found ==
+		desired_number_of_solutions) {
 	    break;
 	}
     }
