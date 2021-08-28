@@ -24,17 +24,15 @@
 // by the library, it receives an array of void pointers
 // and the size of the array
 
-void print_solution(void **sol, size_t size) {
-    char **solution = (char **)sol;
-    unsigned int i;
+void print_solution(dlx_solution_iterator iter) {
 
     printf("S* = {");
 
-    for (i = 0; i + 1 < size; ++i) {
-	printf("%s, ", solution[i]);
+    while (dlx_solution_iterator_remaining(iter) > 1) {
+	printf("%s, ", (char *)dlx_solution_iterator_next(iter));
     }
 
-    printf("%s}\n", solution[i]);
+    printf("%s}\n", (char *)dlx_solution_iterator_next(iter));
 }
 
 // First we create an array with the names of the elements in our
@@ -70,7 +68,7 @@ int main(void) {
     // Look for solutions, specifying the number of required solutions
     dlx_universe_search(universe, DLX_ALL);
 
-    dlx_universe_delete(universe);
+    dlx_universe_free(universe);
 
     return 0;
 }

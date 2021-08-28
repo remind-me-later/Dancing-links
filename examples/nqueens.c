@@ -306,7 +306,7 @@ const unsigned int POSITION_NAME_LENGTH = N / 10 + 4;
 #define DIAGONALS_NAME_LENGTH STRING_LENGTH(NUMBER_OF_DIAGONALS)
 
 // And a function for printing solutions
-void print_solution(void **sol, size_t size);
+void print_solution(dlx_solution_iterator iter);
 
 // With everything set we can finally start
 
@@ -415,37 +415,37 @@ int main(void) {
     dlx_universe_search(u, 0);
 
     // Cleanup
-    dlx_universe_delete(u);
+    dlx_universe_free(u);
 }
 
-void print_solution(void **sol, size_t size) {
-    char **solution = (char **)sol;
-    unsigned int i, j;
-    unsigned int row, col;
-    char board[N][N];
+void print_solution(dlx_solution_iterator iter) {
     static unsigned int sol_number = 1;
-
-    memset(board, ' ', N * N);
 
     printf("Solution %u: ", sol_number);
     sol_number += 1;
 
-    for (i = 0; i + 1 < size; ++i) {
-	printf("%s, ", solution[i]);
+    while (dlx_solution_iterator_remaining(iter) > 1) {
+	printf("%s, ", (char *)dlx_solution_iterator_next(iter));
     }
 
-    printf("%s.\n\n", solution[i]);
+    printf("%s.\n\n", (char *)dlx_solution_iterator_next(iter));
 
-    for (i = 0; i < size; ++i) {
-	row = (unsigned int)solution[i][0] - 'a';
-	col = (unsigned int)atoi(solution[i] + 1) - 1;
+    dlx_solution_iterator_rewind(iter);
+
+    char board[N][N];
+
+    memset(board, ' ', N * N);
+
+    for (char *next; (next = dlx_solution_iterator_next(iter)) != NULL;) {
+	unsigned int row = (unsigned int)(next[0] - 'a');
+	unsigned int col = (unsigned int)atoi(next + 1) - 1;
 	board[row][col] = 'Q';
     }
 
-    for (i = 0; i < N; ++i) {
+    for (unsigned int i = 0; i < N; ++i) {
 	printf("   +---");
 
-	for (j = 1; j < N; ++j) {
+	for (unsigned int j = 1; j < N; ++j) {
 	    printf("+---");
 	}
 
@@ -453,7 +453,7 @@ void print_solution(void **sol, size_t size) {
 
 	printf("%*u | %c ", 2, N - i, board[i][0]);
 
-	for (j = 1; j < N; ++j) {
+	for (unsigned int j = 1; j < N; ++j) {
 	    printf("| %c ", board[i][j]);
 	}
 
@@ -462,7 +462,7 @@ void print_solution(void **sol, size_t size) {
 
     printf("   +---");
 
-    for (j = 1; j < N; ++j) {
+    for (unsigned int j = 1; j < N; ++j) {
 	printf("+---");
     }
 
@@ -470,7 +470,7 @@ void print_solution(void **sol, size_t size) {
 
     printf("     a ");
 
-    for (j = 1; j < N; ++j) {
+    for (unsigned int j = 1; j < N; ++j) {
 	printf("  %c ", 'a' + j);
     }
 

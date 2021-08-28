@@ -27,17 +27,17 @@ void print_sudoku(char sudoku[N][N]) {
     }
 }
 
-void print_solution(void **sol, size_t size) {
-    unsigned int **solution = (unsigned int **)sol;
+void print_solution(dlx_solution_iterator iter) {
     char sudoku[N][N];
     static unsigned int sol_number = 1;
+    unsigned int *next;
 
     printf("Grid %u:\n\n", sol_number++);
 
-    for (unsigned int i = 0; i < size; ++i) {
-	unsigned int row = (*solution[i] / 100) % 10;
-	unsigned int col = (*solution[i] / 10) % 10;
-	unsigned int number = *solution[i] % 10;
+    while ((next = dlx_solution_iterator_next(iter)) != NULL) {
+	unsigned int row = (*next / 100) % 10;
+	unsigned int col = (*next / 10) % 10;
+	unsigned int number = *next % 10;
 
 	sudoku[row][col] = (char)number + '0';
     }
@@ -106,7 +106,7 @@ int main(void) {
 
     dlx_universe_search(universe, 10);
 
-    dlx_universe_delete(universe);
+    dlx_universe_free(universe);
 
     return 0;
 }

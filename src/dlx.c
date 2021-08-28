@@ -1,72 +1,96 @@
 #include "dlx.h"
-
 #include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
 
-// Structs
-typedef struct dlx_node_struct {
-    struct dlx_node_struct *up, *down, *left, *right;
+#define FOREACH(it, node, direction)                                           \
+    for (struct dlx_node *it = (node)->direction; it != (node);                \
+	 it = it->direction)
+
+struct dlx_node {
+    struct dlx_node *up, *down, *left, *right;
 
     union {
 	struct {
-	    struct dlx_node_struct *column;
+	    struct dlx_node *column;
 	    void *subset_label;
 	};
 	unsigned int size;
     };
-} dlx_node;
-
-struct dlx_universe_struct {
-    dlx_node root;
-
-    dlx_node *column_headers;
-    size_t column_headers_size;
-
-    dlx_node **subsets;
-    size_t subsets_size;
-
-    dlx_node **solution_stack;
-    size_t solution_stack_size;
-
-    void (*solution_handler)(void **, size_t);
-
-    unsigned int number_of_solutions_found;
-    void **current_solution;
 };
 
-// Macros
-#define FOREACH(ITER, NODE, DIRECTION)                                         \
-    for (dlx_node *ITER = (NODE)->DIRECTION; ITER != (NODE);                   \
-	 ITER = ITER->DIRECTION)
+struct dlx_solution_iterator {
+    struct dlx_node **solutions;
+    size_t index;
+    size_t end;
+};
 
-/* Node functions */
+struct dlx_universe {
+    struct dlx_node root;
 
-void append_self_horizontally(dlx_node *node) {
+    struct dlx_node *column_headers;
+    size_t column_headers_size;
+
+    struct dlx_node **subsets;
+    size_t subsets_size;
+
+    struct dlx_node **solution_stack;
+    size_t solution_stack_size;
+
+    void (*solution_handler)(struct dlx_solution_iterator *iter);
+    struct dlx_solution_iterator solution_iterator;
+    unsigned int number_of_solutions_found;
+};
+
+// dlx_solution_iterator methods
+
+void dlx_solution_iterator_rewind(struct dlx_solution_iterator *iter) {
+    iter->index = 0;
+}
+
+void dlx_solution_iterator_init(
+    struct dlx_solution_iterator *iter, struct dlx_universe *universe) {
+    iter->index = 0;
+    iter->end = universe->solution_stack_size;
+}
+
+void *dlx_solution_iterator_next(struct dlx_solution_iterator *iter) {
+    if (iter->index >= iter->end) {
+	return NULL;
+    }
+
+    return iter->solutions[iter->index++]->subset_label;
+}
+
+size_t dlx_solution_iterator_remaining(struct dlx_solution_iterator *iter) {
+    return iter->end - iter->index;
+}
+
+// dlx_node methods
+
+void append_self_horizontally(struct dlx_node *node) {
     node->right = node;
     node->left = node;
 }
 
-void append_self_vertically(dlx_node *node) {
+void append_self_vertically(struct dlx_node *node) {
     node->up = node;
     node->down = node;
 }
 
-void append_left(dlx_node *node, dlx_node *left) {
+void append_left(struct dlx_node *node, struct dlx_node *left) {
     node->right = left->right;
     node->left = left;
     left->right->left = node;
     node->left->right = node;
 }
 
-void append_above(dlx_node *node, dlx_node *up) {
+void append_above(struct dlx_node *node, struct dlx_node *up) {
     node->down = up->down;
     node->up = up;
     up->down->up = node;
     node->up->down = node;
 }
 
-void cover(dlx_node *column) {
+void cover(struct dlx_node *column) {
     column->left->right = column->right;
     column->right->left = column->left;
 
@@ -79,7 +103,7 @@ void cover(dlx_node *column) {
     }
 }
 
-void uncover(dlx_node *column) {
+void uncover(struct dlx_node *column) {
     FOREACH(row, column, up) {
 	FOREACH(it, row, left) {
 	    it->up->down = it;
@@ -92,8 +116,10 @@ void uncover(dlx_node *column) {
     column->right->left = column;
 }
 
-dlx_node *choose_column(dlx_universe u) {
-    dlx_node *it, *column = u->root.right;
+// dlx_universe methods
+
+struct dlx_node *choose_column(struct dlx_universe *u) {
+    struct dlx_node *it, *column = u->root.right;
 
     for (it = column->right; it != &u->root; it = it->right) {
 	if (it->size < column->size) {
@@ -104,90 +130,84 @@ dlx_node *choose_column(dlx_universe u) {
     return column;
 }
 
-// Library functions
-
-dlx_universe dlx_universe_new(
-    void (*solution_handler)(void **, size_t),
+struct dlx_universe *dlx_universe_new(
+    void (*solution_handler)(struct dlx_solution_iterator *iter),
     size_t number_of_primary_constraints,
     size_t number_of_secondary_constraints, size_t number_of_subsets) {
-    dlx_universe u = malloc(sizeof(*u));
+    struct dlx_universe *universe = malloc(sizeof(struct dlx_universe));
 
-    if (u == NULL) {
+    if (universe == NULL) {
 	return NULL;
     }
 
     size_t number_of_constraints =
 	number_of_primary_constraints + number_of_secondary_constraints;
 
-    u->column_headers = malloc(sizeof(dlx_node) * number_of_constraints);
+    universe->column_headers =
+	malloc(sizeof(struct dlx_node) * number_of_constraints);
 
-    if (u->column_headers == NULL) {
+    if (universe->column_headers == NULL) {
 	return NULL;
     }
 
-    u->column_headers_size = number_of_constraints;
+    universe->column_headers_size = number_of_constraints;
 
-    u->subsets = malloc(sizeof(dlx_node *) * number_of_subsets);
+    universe->subsets = malloc(sizeof(struct dlx_node *) * number_of_subsets);
 
-    if (u->subsets == NULL) {
+    if (universe->subsets == NULL) {
 	return NULL;
     }
 
-    u->subsets_size = 0;
+    universe->subsets_size = 0;
 
-    u->solution_stack = malloc(sizeof(dlx_node *) * number_of_constraints);
+    universe->solution_stack =
+	malloc(sizeof(struct dlx_node *) * number_of_constraints);
 
-    if (u->solution_stack == NULL) {
+    if (universe->solution_stack == NULL) {
 	return NULL;
     }
 
-    u->solution_stack_size = 0;
+    universe->solution_iterator.solutions = universe->solution_stack;
 
-    u->current_solution = malloc(sizeof(void *) * number_of_constraints);
+    universe->solution_stack_size = 0;
+    universe->number_of_solutions_found = 0;
+    universe->solution_handler = solution_handler;
 
-    if (u->current_solution == NULL) {
-	return NULL;
-    }
-
-    u->number_of_solutions_found = 0;
-
-    u->solution_handler = solution_handler;
-
-    append_self_vertically(&u->root);
-    append_self_horizontally(&u->root);
+    append_self_vertically(&universe->root);
+    append_self_horizontally(&universe->root);
 
     for (size_t i = 0; i < number_of_primary_constraints; ++i) {
-	append_self_vertically(u->column_headers + i);
-	append_left(u->column_headers + i, u->root.left);
-	u->column_headers[i].size = 0;
+	append_self_vertically(universe->column_headers + i);
+	append_left(universe->column_headers + i, universe->root.left);
+	universe->column_headers[i].size = 0;
     }
 
     for (size_t i = number_of_primary_constraints; i < number_of_constraints;
 	 ++i) {
-	append_self_vertically(u->column_headers + i);
-	append_self_horizontally(u->column_headers + i);
-	u->column_headers[i].size = 0;
+	append_self_vertically(universe->column_headers + i);
+	append_self_horizontally(universe->column_headers + i);
+	universe->column_headers[i].size = 0;
     }
 
-    return u;
+    return universe;
 }
 
-void dlx_universe_delete(dlx_universe u) {
-    for (size_t i = 0; i < u->subsets_size; ++i) {
-	free(u->subsets[i]);
+void dlx_universe_free(struct dlx_universe *universe) {
+    for (size_t i = 0; i < universe->subsets_size; ++i) {
+	free(universe->subsets[i]);
     }
 
-    free(u->subsets);
-    free(u->current_solution);
-    free(u->solution_stack);
-    free(u->column_headers);
-    free(u);
+    free(universe->subsets);
+    free(universe->solution_stack);
+    free(universe->column_headers);
+    free(universe);
 }
 
 void dlx_universe_add_subset(
-    dlx_universe universe, size_t subset_size, void *subset_label, ...) {
+    struct dlx_universe *universe, size_t subset_size, void *subset_label,
+    ...) {
     va_list args;
-    dlx_node *subset = malloc(sizeof(dlx_node) * subset_size);
+    struct dlx_node *subset = malloc(sizeof(struct dlx_node) * subset_size);
 
     va_start(args, subset_label);
 
@@ -207,26 +227,16 @@ void dlx_universe_add_subset(
     universe->subsets[universe->subsets_size++] = subset;
 }
 
-void **dlx_get_solution(dlx_universe universe) {
-    for (size_t i = 0; i < universe->solution_stack_size; ++i) {
-	universe->current_solution[i] =
-	    universe->solution_stack[i]->subset_label;
-    }
-
-    return universe->current_solution;
-}
-
 void dlx_universe_search(
-    dlx_universe universe, unsigned int desired_number_of_solutions) {
+    struct dlx_universe *universe, unsigned int desired_number_of_solutions) {
     if (universe->root.right == &universe->root) {
-	(*universe->solution_handler)(
-	    dlx_get_solution(universe), universe->solution_stack_size);
-
+	dlx_solution_iterator_init(&universe->solution_iterator, universe);
+	(*universe->solution_handler)(&universe->solution_iterator);
 	++universe->number_of_solutions_found;
 	return;
     }
 
-    dlx_node *column = choose_column(universe);
+    struct dlx_node *column = choose_column(universe);
 
     cover(column);
 
